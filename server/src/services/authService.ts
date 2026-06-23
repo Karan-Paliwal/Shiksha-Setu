@@ -33,7 +33,7 @@ export const signupUser = async (
     password: hashedPassword,
   });
 
-  const token = generateToken(user._id as string);
+  const token = generateToken(user._id.toString());
 
   return {
     user: {
@@ -63,7 +63,7 @@ export const loginUser = async (
     throw new Error("Invalid email or password");
   }
 
-  const token = generateToken(user._id as string);
+  const token = generateToken(user._id.toString());
 
   return {
     user: {

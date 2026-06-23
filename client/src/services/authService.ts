@@ -23,7 +23,7 @@ export const authService = {
   },
 
   getProfile: async () => {
-    const { data } = await api.get("/auth/profile");
+    const { data } = await api.get("/profile/me"); // Use the new profile endpoint
     return data;
   },
 };

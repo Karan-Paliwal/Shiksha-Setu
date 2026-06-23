@@ -1,30 +1,38 @@
 import React from "react";
 import { useAuth } from "../hooks/useAuth";
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  toggleSidebar: () => void;
+  isSidebarCollapsed: boolean;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isSidebarCollapsed }) => {
   const { user } = useAuth();
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
-  };
-
   return (
-    <header className="topbar">
-      <div className="topbar-title">Welcome back, {user?.name.split(" ")[0]}! 👋</div>
-      <div className="topbar-actions">
-        <div className="profile-dropdown">
-          <div className="profile-avatar">
-            {user?.name ? getInitials(user.name) : "U"}
-          </div>
-          <div className="d-none d-md-block ms-2">
-            <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>{user?.name}</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--ss-text-muted)" }}>Student</div>
-          </div>
+    <header className="topbar transition">
+      <div className="d-flex align-items-center">
+        <button onClick={toggleSidebar} className="btn btn-link text-ss-muted me-3 p-0 border-0 fs-4 hover-primary">
+          <i className="bi bi-list"></i>
+        </button>
+        <div className="search-bar">
+          <i className="bi bi-search text-ss-muted me-2"></i>
+          <input type="text" placeholder="Search resources, scholarships..." />
+        </div>
+      </div>
+      <div className="topbar-actions d-flex align-items-center">
+        <button className="btn btn-link text-ss-muted position-relative me-3 p-0">
+          <i className="bi bi-bell fs-5"></i>
+          <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+            <span className="visually-hidden">New alerts</span>
+          </span>
+        </button>
+        <div className="profile-dropdown ms-2 d-flex align-items-center">
+          <img 
+            src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=2563eb&color=fff&rounded=true`} 
+            alt="Profile" 
+            className="profile-avatar shadow-sm border border-2 border-white"
+          />
         </div>
       </div>
     </header>

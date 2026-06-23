@@ -4,8 +4,8 @@ import { authService } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("demo@shikshasetu.local");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 

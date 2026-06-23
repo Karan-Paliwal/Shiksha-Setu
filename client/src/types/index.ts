@@ -3,6 +3,14 @@ export interface User {
   _id: string;
   name: string;
   email: string;
+  isProfileComplete?: boolean;
+  academicProfile?: {
+    currentCgpa: number;
+    targetCgpa: number;
+    creditsEarned: number;
+    totalCredits: number;
+    currentSemester: number;
+  };
   createdAt: string;
 }
 

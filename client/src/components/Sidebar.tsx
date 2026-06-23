@@ -1,51 +1,73 @@
 import React from "react";
+import "./Sidebar.css";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isCollapsed: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
   const { logout } = useAuth();
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-brand">
-        <i className="bi bi-mortarboard-fill me-2"></i>
-        ShikshaSetu
+    <aside className="sidebar transition">
+      <div className="sidebar-brand mb-3 d-flex align-items-center">
+        <img src="/logo.jpeg" alt="Shiksha Setu Logo" className="shadow-sm sb-logo-img" />
+        <span className={`text-ss-bright fw-bold ms-2 sidebar-text ${isCollapsed ? 'd-none' : ''} sb-brand-text`}>Shiksha Setu</span>
       </div>
 
-      <nav className="sidebar-nav">
-        <div className="sidebar-section-label">Main</div>
+      <nav className="sidebar-nav mt-2">
         <NavLink to="/dashboard" end className="sidebar-link">
-          <i className="bi bi-grid-1x2-fill"></i>
-          Dashboard
+          <i className="bi bi-grid-1x2"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>Dashboard</span>
         </NavLink>
 
-        <div className="sidebar-section-label mt-3">Modules</div>
         <NavLink to="/dashboard/academics" className="sidebar-link">
-          <i className="bi bi-journal-bookmark-fill" style={{ color: "var(--ss-academics)" }}></i>
-          Academic Planner
+          <i className="bi bi-journal-bookmark"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>Academics</span>
         </NavLink>
+
         <NavLink to="/dashboard/ai" className="sidebar-link">
-          <i className="bi bi-robot" style={{ color: "var(--ss-ai)" }}></i>
-          AI Assistant
+          <i className="bi bi-robot"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>AI Study Assistant</span>
         </NavLink>
+
+
         <NavLink to="/dashboard/opportunities" className="sidebar-link">
-          <i className="bi bi-briefcase-fill" style={{ color: "var(--ss-opportunities)" }}></i>
-          Opportunities Hub
+          <i className="bi bi-mortarboard"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>Scholarships</span>
         </NavLink>
-        <NavLink to="/dashboard/career" className="sidebar-link">
-          <i className="bi bi-rocket-takeoff-fill" style={{ color: "var(--ss-career)" }}></i>
-          Career Builder
+
+        <NavLink to="/dashboard/skill-dev" className="sidebar-link">
+          <i className="bi bi-bullseye"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>Skills Development</span>
+        </NavLink>
+
+        <NavLink to="/dashboard/interview-prep" className="sidebar-link">
+          <i className="bi bi-chat-square-text"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>Interview Prep</span>
+        </NavLink>
+
+        <NavLink to="/dashboard/resume-builder" className="sidebar-link">
+          <i className="bi bi-file-earmark-person"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>Resume Builder</span>
+        </NavLink>
+
+
+        <NavLink to="/dashboard/profile" className="sidebar-link">
+          <i className="bi bi-person-circle"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>Profile</span>
         </NavLink>
       </nav>
 
-      <div className="sidebar-footer">
+      <div className="p-3 border-top mt-auto">
         <button
           onClick={logout}
-          className="sidebar-link w-100 border-0 bg-transparent text-start"
-          style={{ color: "#f5576c" }}
+          className="sidebar-link w-100 border-0 bg-transparent text-start text-danger"
         >
-          <i className="bi bi-box-arrow-right"></i>
-          Logout
+          <i className="bi bi-box-arrow-left"></i>
+          <span className={`sidebar-text ${isCollapsed ? 'd-none' : ''}`}>Sign Out</span>
         </button>
       </div>
     </aside>

@@ -12,14 +12,20 @@ const Dashboard = lazy(() => import("../pages/Dashboard"));
 const AcademicsHome = lazy(() => import("../pages/academics/AcademicsHome"));
 const AIHome = lazy(() => import("../pages/ai/AIHome"));
 const OpportunitiesHome = lazy(() => import("../pages/opportunities/OpportunitiesHome"));
-const CareerHome = lazy(() => import("../pages/career/CareerHome"));
+const InterviewPrepHome = lazy(() => import("../pages/interview/InterviewPrepHome"));
+const SkillDevHome = lazy(() => import("../pages/skill-dev/SkillDevHome"));
+
+const Onboarding = lazy(() => import("../pages/Onboarding"));
+const ResumeBuilderHome = lazy(() => import("../pages/resume/ResumeBuilderHome"));
+const ProfileHome = lazy(() => import("../pages/profile/ProfileHome"));
 
 // ─── Protected Route Wrapper ─────────────────────────────
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) return <LoadingSpinner />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user && user.isProfileComplete === false) return <Navigate to="/onboarding" replace />;
 
   return <>{children}</>;
 };
@@ -34,6 +40,14 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const OnboardingRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  if (isLoading) return <LoadingSpinner />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.isProfileComplete) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+};
+
 const AppRoutes: React.FC = () => {
   return (
     <Suspense fallback={<LoadingSpinner fullScreen />}>
@@ -42,6 +56,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+
+        <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
 
         {/* Protected Dashboard Routes */}
         <Route
@@ -54,9 +70,13 @@ const AppRoutes: React.FC = () => {
         >
           <Route index element={<Dashboard />} />
           <Route path="academics" element={<AcademicsHome />} />
+
           <Route path="ai" element={<AIHome />} />
           <Route path="opportunities" element={<OpportunitiesHome />} />
-          <Route path="career" element={<CareerHome />} />
+          <Route path="skill-dev" element={<SkillDevHome />} />
+          <Route path="interview-prep" element={<InterviewPrepHome />} />
+          <Route path="resume-builder" element={<ResumeBuilderHome />} />
+          <Route path="profile" element={<ProfileHome />} />
         </Route>
 
         {/* Fallback */}

@@ -1,0 +1,134 @@
+.ip-title {
+  font-size: 2rem;
+}
+
+.ip-subtitle {
+  max-width: 500px;
+}
+
+.ip-bg-light {
+  background-color: #f8fafc;
+}
+
+.ip-icon-sm {
+  width: 40px;
+  height: 40px;
+}
+
+.ip-text-base {
+  font-size: 0.9rem;
+}
+
+.ip-select {
+  width: 120px;
+}
+
+.ip-text-body {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.ip-editor-header {
+  background-color: #1e1e1e;
+}
+
+.ip-text-sm {
+  font-size: 0.85rem;
+}
+
+.ip-editor-body {
+  font-size: 0.9rem;
+  color: #d4d4d4;
+  background-color: #1e1e1e;
+  min-height: 300px;
+}
+
+.ip-code-keyword {
+  color: #c586c0;
+}
+
+.ip-code-function {
+  color: #dcdcaa;
+}
+
+.ip-code-var {
+  color: #9cdcfe;
+}
+
+.ip-code-bool {
+  color: #569cd6;
+}
+
+.ip-text-xs {
+  font-size: 0.8rem;
+}
+
+.ip-scroll-container {
+  scroll-snap-type: x mandatory;
+}
+
+.ip-scroll-item {
+  width: 320px;
+  scroll-snap-align: start;
+}
+
+.ip-avatar-md {
+  width: 45px;
+  height: 45px;
+}
+
+.ip-textarea {
+  resize: none;
+}
+
+.ip-badge-text {
+  font-size: 0.7rem;
+}
+
+.ip-time-text {
+  font-size: 0.75rem;
+}
+
+.ip-comment-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.ip-progress-bg {
+  height: 6px;
+}
+
+.ip-w-95 {
+  width: 95%;
+}
+
+.ip-w-82 {
+  width: 82%;
+}
+
+.ip-w-88 {
+  width: 88%;
+}
+
+.ip-w-65 {
+  width: 65%;
+}
+
+.ip-timeline-dot {
+  width: 10px;
+  height: 10px;
+  left: -6px;
+  top: 8px;
+}
+
+.ip-avatar-lg {
+  width: 60px;
+  height: 60px;
+}
+
+.ip-status-dot {
+  width: 14px;
+  height: 14px;
+  bottom: 2px;
+  right: 2px;
+}

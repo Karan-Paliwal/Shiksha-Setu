@@ -1,0 +1,47 @@
+.lp-badge-text {
+  font-size: 0.85rem;
+}
+
+.lp-hero-title {
+  font-size: 4.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #111827;
+}
+
+.lp-hero-subtitle {
+  max-width: 700px;
+  line-height: 1.6;
+}
+
+.lp-mockup-container {
+  max-width: 1000px;
+  margin-top: 40px;
+}
+
+.lp-floating-card {
+  top: -40px;
+  left: -20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  z-index: 10;
+}
+
+.lp-card-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+}
+
+.lp-mockup-window {
+  height: 300px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+}
+
+.lp-window-btn {
+  width: 12px;
+  height: 12px;
+}
+
+.lp-mockup-content {
+  height: 200px;
+}

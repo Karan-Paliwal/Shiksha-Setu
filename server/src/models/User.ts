@@ -1,9 +1,19 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface IAcademicProfile {
+  currentCgpa: number;
+  targetCgpa: number;
+  creditsEarned: number;
+  totalCredits: number;
+  currentSemester: number;
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  isProfileComplete: boolean;
+  academicProfile?: IAcademicProfile;
   createdAt: Date;
 }
 
@@ -31,6 +41,17 @@ const UserSchema = new Schema<IUser>({
     type: Date,
     default: Date.now,
   },
+  isProfileComplete: {
+    type: Boolean,
+    default: false,
+  },
+  academicProfile: {
+    currentCgpa: { type: Number, default: 0 },
+    targetCgpa: { type: Number, default: 0 },
+    creditsEarned: { type: Number, default: 0 },
+    totalCredits: { type: Number, default: 0 },
+    currentSemester: { type: Number, default: 1 },
+  }
 });
 
 export default mongoose.model<IUser>("User", UserSchema);

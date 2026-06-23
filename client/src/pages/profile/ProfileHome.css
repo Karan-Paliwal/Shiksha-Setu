@@ -1,0 +1,29 @@
+.ph-profile-pic {
+  width: 80px;
+  height: 80px;
+}
+
+.ph-text-xs {
+  font-size: 0.75rem;
+}
+
+.ph-progress-container {
+  height: 10px;
+}
+
+.ph-progress-bar {
+  transition-duration: 1s;
+}
+
+.ph-text-sm {
+  font-size: 0.85rem;
+}
+
+.ph-icon-wrapper {
+  width: 35px;
+  height: 35px;
+}
+
+.ph-text-xxs {
+  font-size: 0.7rem;
+}

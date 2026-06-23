@@ -1,4 +1,5 @@
 import React from "react";
+import "./LoadingSpinner.css";
 
 interface LoadingSpinnerProps {
   fullScreen?: boolean;
@@ -7,15 +8,7 @@ interface LoadingSpinnerProps {
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ fullScreen = false }) => {
   if (fullScreen) {
     return (
-      <div
-        style={{
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--ss-bg)",
-        }}
-      >
+      <div className="ls-fullscreen">
         <div className="ss-spinner"></div>
       </div>
     );

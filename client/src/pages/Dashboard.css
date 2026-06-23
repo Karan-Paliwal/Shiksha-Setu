@@ -1,0 +1,83 @@
+.db-icon-bg {
+  font-size: 4rem;
+  margin-right: -10px;
+  margin-top: -10px;
+}
+
+.db-text-xs-spacing {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+.db-text-xs {
+  font-size: 0.75rem;
+}
+
+.db-progress-bg {
+  height: 6px;
+}
+
+.db-chart-container {
+  width: 80px;
+  height: 80px;
+}
+
+.db-chart-svg {
+  transform: rotate(-90deg);
+}
+
+.db-text-xs-alt {
+  font-size: 0.8rem;
+}
+
+.db-text-sm {
+  font-size: 0.85rem;
+}
+
+.db-chart-area-container {
+  height: 300px;
+}
+
+.db-chart-y-axis {
+  width: 30px;
+  left: 0;
+  font-size: 0.8rem;
+  padding-bottom: 30px;
+}
+
+.db-chart-main-area {
+  left: 40px;
+  right: 20px;
+  bottom: 30px;
+}
+
+.db-chart-grid-1 {
+  top: 33.33%;
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.db-chart-grid-2 {
+  top: 66.66%;
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.db-chart-x-axis {
+  bottom: -30px;
+  font-size: 0.8rem;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.db-icon-sm {
+  width: 40px;
+  height: 40px;
+}
+
+.db-text-xxs-spacing {
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+}
+
+.db-text-base {
+  font-size: 0.9rem;
+}
