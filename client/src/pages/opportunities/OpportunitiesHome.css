@@ -1,0 +1,49 @@
+.oh-icon-md {
+  width: 48px;
+  height: 48px;
+}
+
+.oh-text-sm {
+  font-size: 0.85rem;
+}
+
+.oh-hero-icon {
+  font-size: 10rem;
+  left: -20px;
+  top: -10px;
+}
+
+.oh-icon-lg {
+  width: 60px;
+  height: 60px;
+}
+
+.oh-text-base {
+  font-size: 0.9rem;
+}
+
+.oh-text-xs {
+  font-size: 0.75rem;
+}
+
+.oh-text-xs-alt {
+  font-size: 0.8rem;
+}
+
+.oh-progress-bg {
+  height: 6px;
+  background: rgba(255,255,255,0.2);
+}
+
+.oh-w-65 {
+  width: 65%;
+}
+
+.oh-text-xxs {
+  font-size: 0.7rem;
+}
+
+.oh-icon-md-alt {
+  width: 50px;
+  height: 50px;
+}

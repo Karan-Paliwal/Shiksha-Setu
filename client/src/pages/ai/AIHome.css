@@ -1,0 +1,98 @@
+.ai-page-pb {
+  padding-bottom: 2rem;
+}
+
+.ai-chat-container {
+  min-height: 850px;
+}
+
+.ai-text-xs-spacing {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+.ai-text-base {
+  font-size: 0.9rem;
+}
+
+.ai-text-xs {
+  font-size: 0.75rem;
+}
+
+.ai-text-sm {
+  font-size: 0.85rem;
+}
+
+.ai-chat-bg {
+  background-color: #fcfcfc;
+}
+
+.ai-icon-lg {
+  width: 80px;
+  height: 80px;
+}
+
+.ai-icon-text-lg {
+  font-size: 2.5rem;
+}
+
+.ai-max-w-400 {
+  max-width: 400px;
+}
+
+.ai-max-w-500 {
+  max-width: 500px;
+}
+
+.ai-text-xs-alt-spacing {
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+.ai-max-w-85 {
+  max-width: 85%;
+}
+
+.ai-text-md-lh {
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.ai-text-xxs {
+  font-size: 0.7rem;
+}
+
+.ai-delay-1 {
+  animation-delay: 0.2s;
+}
+
+.ai-delay-2 {
+  animation-delay: 0.4s;
+}
+
+.ai-text-md {
+  font-size: 0.95rem;
+}
+
+.ai-icon-sm {
+  width: 40px;
+  height: 40px;
+}
+
+.ai-text-xxs-alt {
+  font-size: 0.65rem;
+}
+
+.ai-timer-text {
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.ai-text-xs-alt {
+  font-size: 0.8rem;
+}
+
+.ai-icon-xl {
+  font-size: 3rem;
+}

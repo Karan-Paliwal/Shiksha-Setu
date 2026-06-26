@@ -1,0 +1,36 @@
+.ah-text-xs-spacing {
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+.ah-max-w-150 {
+  max-width: 150px;
+}
+
+.ah-text-xs {
+  font-size: 0.75rem;
+}
+
+.ah-icon-xl {
+  font-size: 12rem;
+  right: -20px;
+  top: -40px;
+}
+
+.ah-text-base {
+  font-size: 0.9rem;
+}
+
+.ah-text-sm-alt {
+  font-size: 0.8rem;
+}
+
+.ah-timeline-line {
+  width: 4px;
+  height: 100%;
+  left: -24px;
+}
+
+.ah-text-sm {
+  font-size: 0.85rem;
+}

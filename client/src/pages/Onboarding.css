@@ -1,0 +1,26 @@
+.ob-page-layout {
+  align-items: flex-start;
+  padding-top: 5rem;
+}
+
+.ob-card-container {
+  max-width: 700px;
+}
+
+.ob-icon-wrapper {
+  width: 64px;
+  height: 64px;
+}
+
+.ob-progress-step {
+  width: 40px;
+  height: 6px;
+}
+
+.ob-text-sm {
+  font-size: 0.85rem;
+}
+
+.ob-day-select {
+  width: 120px;
+}

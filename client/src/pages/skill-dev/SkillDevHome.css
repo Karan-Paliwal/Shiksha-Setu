@@ -1,0 +1,110 @@
+.sd-hub-title {
+  font-size: 2rem;
+}
+
+.sd-hub-subtitle {
+  max-width: 600px;
+}
+
+.sd-view-all {
+  font-size: 0.9rem;
+}
+
+.sd-course-icon-wrapper {
+  width: 48px;
+  height: 48px;
+}
+
+.sd-course-module {
+  font-size: 0.85rem;
+}
+
+.sd-progress-label,
+.sd-progress-value {
+  font-size: 0.8rem;
+}
+
+.sd-progress-container {
+  height: 6px;
+}
+
+.sd-w-65 {
+  width: 65%;
+}
+
+.sd-w-32 {
+  width: 32%;
+}
+
+.sd-recommendation-subtitle {
+  font-size: 0.85rem;
+}
+
+.sd-path-icon-wrapper {
+  width: 60px;
+  height: 60px;
+}
+
+.sd-path-desc {
+  font-size: 0.9rem;
+}
+
+.sd-path-meta {
+  font-size: 0.8rem;
+}
+
+.sd-assessment-subtitle {
+  font-size: 0.85rem;
+}
+
+.sd-assessment-icon {
+  font-size: 2.5rem;
+}
+
+.sd-assessment-meta {
+  font-size: 0.8rem;
+}
+
+.sd-daily-icon {
+  font-size: 4rem;
+  margin-right: -10px;
+  margin-top: -10px;
+}
+
+.sd-daily-title {
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+}
+
+.sd-daily-time {
+  font-size: 0.9rem;
+}
+
+.sd-daily-chart-wrapper {
+  width: 120px;
+  height: 120px;
+}
+
+.sd-daily-chart-svg {
+  transform: rotate(-90deg);
+}
+
+.sd-daily-streak {
+  font-size: 0.85rem;
+}
+
+.sd-verified-edit {
+  font-size: 0.85rem;
+}
+
+.sd-cert-title {
+  font-size: 0.9rem;
+}
+
+.sd-cert-meta {
+  font-size: 0.8rem;
+}
+
+.sd-cert-ms-icon {
+  color: #0078d4;
+}
