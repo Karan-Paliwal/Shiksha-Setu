@@ -14,6 +14,7 @@ const AIHome = lazy(() => import("../pages/ai/AIHome"));
 const OpportunitiesHome = lazy(() => import("../pages/opportunities/OpportunitiesHome"));
 const InterviewPrepHome = lazy(() => import("../pages/interview/InterviewPrepHome"));
 const SkillDevHome = lazy(() => import("../pages/skill-dev/SkillDevHome"));
+const DetailedAnalytics = lazy(() => import("../pages/analytics/DetailedAnalytics"));
 
 const Onboarding = lazy(() => import("../pages/Onboarding"));
 const ResumeBuilderHome = lazy(() => import("../pages/resume/ResumeBuilderHome"));
@@ -53,7 +54,7 @@ const AppRoutes: React.FC = () => {
     <Suspense fallback={<LoadingSpinner fullScreen />}>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
 
@@ -77,6 +78,7 @@ const AppRoutes: React.FC = () => {
           <Route path="interview-prep" element={<InterviewPrepHome />} />
           <Route path="resume-builder" element={<ResumeBuilderHome />} />
           <Route path="profile" element={<ProfileHome />} />
+          <Route path="analytics" element={<DetailedAnalytics />} />
         </Route>
 
         {/* Fallback */}

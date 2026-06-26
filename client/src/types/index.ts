@@ -10,8 +10,22 @@ export interface User {
     creditsEarned: number;
     totalCredits: number;
     currentSemester: number;
+    predictedCgpa?: number;
+    highestCgpa?: number;
+    averageCgpa?: number;
+    semesterGpas?: number[];
+  };
+  profileDetails?: {
+    category?: string;
+    income?: string;
+    interests?: string;
+  };
+  documents?: {
+    marksheets?: Record<string, string>;
+    timetable?: string;
   };
   createdAt: string;
+  profilePicture?: string;
 }
 
 export interface AuthResponse {

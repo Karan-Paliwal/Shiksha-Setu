@@ -7,7 +7,7 @@ import api from "../services/api";
 const Onboarding: React.FC = () => {
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
-  const { user, login } = useAuth(); // Assuming login updates user context
+  const { user, updateUser } = useAuth();
 
   // Step 1 State
   const [currentCgpa, setCurrentCgpa] = useState("");
@@ -28,7 +28,7 @@ const Onboarding: React.FC = () => {
       // Final Submit
       try {
         // Save Profile
-        await api.put("/profile/setup", {
+        const response = await api.put("/profile/setup", {
           currentCgpa,
           targetCgpa,
           creditsEarned,
@@ -36,14 +36,25 @@ const Onboarding: React.FC = () => {
           currentSemester
         });
 
+        // Filter empty classes
+        const validClasses = classes.filter(c => c.courseName.trim() !== "");
+
         // Save Schedule
-        await api.post("/schedule/save", { classes });
+        if (validClasses.length > 0) {
+          await api.post("/schedule/save", { classes: validClasses });
+        }
 
         // Update auth state (trigger re-fetch of user to get isProfileComplete)
-        // For now, simply navigate to dashboard.
-        window.location.href = "/dashboard"; 
+        if (response.data && response.data.user) {
+          updateUser(response.data.user);
+        } else if (user) {
+          updateUser({ ...user, isProfileComplete: true });
+        }
+
+        navigate("/dashboard"); 
       } catch (error) {
         console.error("Failed to complete onboarding", error);
+        alert("An error occurred during setup. Please try again.");
       }
     }
   };

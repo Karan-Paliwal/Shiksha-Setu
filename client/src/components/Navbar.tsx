@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 interface NavbarProps {
@@ -28,11 +29,14 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isSidebarCollapsed }) =>
           </span>
         </button>
         <div className="profile-dropdown ms-2 d-flex align-items-center">
-          <img 
-            src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=2563eb&color=fff&rounded=true`} 
-            alt="Profile" 
-            className="profile-avatar shadow-sm border border-2 border-white"
-          />
+          <Link to="/dashboard/profile">
+            <img 
+              src={user?.profilePicture || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=2563eb&color=fff&rounded=true`} 
+              alt="Profile" 
+              className="profile-avatar shadow-sm border border-2 border-white cursor-pointer transition hover-shadow"
+              style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+            />
+          </Link>
         </div>
       </div>
     </header>

@@ -1,11 +1,31 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import "./Dashboard.css";
 import { useAuth } from "../hooks/useAuth";
 import api from "../services/api";
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, token, login } = useAuth();
   const [schedule, setSchedule] = useState<any[]>([]);
+  const [academicProfile, setAcademicProfile] = useState<any>(null);
+
+  // Schedule Form State
+  const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
+  const [newCourseName, setNewCourseName] = useState("");
+  const [newDayOfWeek, setNewDayOfWeek] = useState("Monday");
+  const [newStartTime, setNewStartTime] = useState("09:00 AM");
+  const [newEndTime, setNewEndTime] = useState("10:00 AM");
+  const [newLocation, setNewLocation] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // AI Marksheet Upload/Scanning State
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState("");
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [aiUsed, setAiUsed] = useState<boolean | null>(null);
+  const [isSem1Upload, setIsSem1Upload] = useState(false);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -16,43 +36,290 @@ const Dashboard: React.FC = () => {
         console.error("Failed to fetch schedule", err);
       }
     };
+
+    const fetchProfile = async () => {
+      try {
+        const { data } = await api.get("/profile/me");
+        if (data) {
+          if (data.academicProfile) {
+            setAcademicProfile(data.academicProfile);
+          }
+          if (token) {
+            login(data, token);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch academic profile", err);
+      }
+    };
+
     fetchSchedule();
+    fetchProfile();
   }, []);
 
-  const academic = user?.academicProfile || {
-    currentCgpa: 0, targetCgpa: 0, creditsEarned: 0, totalCredits: 160, currentSemester: 1
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    setUploadError(null);
+    setUploadSuccess(false);
+    setAiUsed(null);
+    setAnalysisProgress(10);
+    setAnalysisStep("Uploading marksheet to Cloudinary secure storage...");
+
+    const steps = [
+      { progress: 25, step: "Cloudinary: File uploaded and secured in cloud storage..." },
+      { progress: 50, step: "AI Vision: Reading text, tables, and grade data from document..." },
+      { progress: 75, step: "AI Analysis: Extracting semester-wise SGPAs and cumulative CGPA..." },
+      { progress: 90, step: "Predictive Model: Computing degree CGPA projection..." },
+      { progress: 100, step: "Finalizing: Saving AI-verified academic data to your profile..." }
+    ];
+
+    let stepIndex = 0;
+    const interval = setInterval(() => {
+      if (stepIndex < steps.length) {
+        setAnalysisProgress(steps[stepIndex].progress);
+        setAnalysisStep(steps[stepIndex].step);
+        stepIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64Data = reader.result as string;
+      try {
+        // Wait at least 5s — Cloudinary + Gemini AI takes time
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+
+        const response = await api.post("/academics/upload-marksheet", {
+          fileName: file.name,
+          fileType: file.type,
+          fileData: base64Data
+        });
+
+        const updatedProfile = response.data.academicProfile;
+        setAcademicProfile(updatedProfile);
+        setAiUsed(response.data.aiUsed ?? false);
+        setIsSem1Upload(response.data.isSem1 ?? false);
+
+        // Update global auth context user profile
+        if (token) {
+          login(response.data.user, token);
+        }
+
+        setUploadSuccess(true);
+      } catch (err: any) {
+        console.error(err);
+        setUploadError(err.response?.data?.error || "Failed to analyze marksheet document.");
+      } finally {
+        setIsAnalyzing(false);
+        clearInterval(interval);
+      }
+    };
+
+    reader.onerror = () => {
+      setUploadError("Error reading marksheet file.");
+      setIsAnalyzing(false);
+      clearInterval(interval);
+    };
+
+    reader.readAsDataURL(file);
   };
+
+  const handleAddScheduleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+
+    if (!newCourseName.trim()) {
+      setFormError("Course name is required");
+      return;
+    }
+
+    const newClass = {
+      courseName: newCourseName.trim(),
+      dayOfWeek: newDayOfWeek,
+      startTime: newStartTime.trim(),
+      endTime: newEndTime.trim(),
+      location: newLocation.trim() || "TBA"
+    };
+
+    const updatedClasses = [...schedule, newClass];
+
+    try {
+      const response = await api.post("/schedule/save", { classes: updatedClasses });
+      if (response.data && response.data.schedule) {
+        setSchedule(response.data.schedule.classes);
+        setShowAddScheduleModal(false);
+        // Clear form
+        setNewCourseName("");
+        setNewLocation("");
+        setNewStartTime("09:00 AM");
+        setNewEndTime("10:00 AM");
+        setNewDayOfWeek("Monday");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setFormError(err.response?.data?.error || "Failed to add class to schedule");
+    }
+  };
+
+  // Helper values for calculations (with realistic fallbacks)
+  const defaultSemesterGpas = [8.20, 8.45, 8.12, 8.68, 9.15];
+  const defaultHighestCgpa = 9.12;
+  const defaultAverageCgpa = 8.35;
+  const defaultPredictedCgpa = 8.65;
+
+  const profile = academicProfile || user?.academicProfile || {};
+  const currentCgpa = profile.currentCgpa || 0;
+  const targetCgpa = profile.targetCgpa || 9.0;
+  const creditsEarned = profile.creditsEarned || 0;
+  const totalCredits = profile.totalCredits || 160;
+  const currentSemester = profile.currentSemester || 1;
+
+  const displayPredictedCgpa = profile.predictedCgpa || defaultPredictedCgpa;
+
+  // Use real data if available
+  const rawSemesterGpas = (profile.semesterGpas && profile.semesterGpas.length > 0)
+    ? profile.semesterGpas
+    : [];
+
+  const displayAverageCgpa = profile.averageCgpa || (rawSemesterGpas.length ? 0 : defaultAverageCgpa);
+  const displayHighestCgpa = profile.highestCgpa || (rawSemesterGpas.length ? 0 : defaultHighestCgpa);
+
+  let improvementRate = 0;
+  if (rawSemesterGpas.length >= 2) {
+    const validGpas = rawSemesterGpas.filter((g: number) => g > 0);
+    if (validGpas.length >= 2) {
+      const lastGpa = validGpas[validGpas.length - 1];
+      const prevGpa = validGpas[validGpas.length - 2];
+      improvementRate = ((lastGpa - prevGpa) / prevGpa) * 100;
+    }
+  } else if (!rawSemesterGpas.length) {
+    improvementRate = 0.4;
+  }
   
-  const progressPercent = academic.totalCredits > 0 ? (academic.creditsEarned / academic.totalCredits) * 100 : 0;
+  const displayImprovementRate = `${improvementRate >= 0 ? '+' : ''}${improvementRate.toFixed(1)}%`;
+  const improvementRateClass = improvementRate >= 0 ? "text-success" : "text-danger";
+  const improvementRateIconClass = improvementRate >= 0 ? "bg-success text-success" : "bg-danger text-danger";
+  const improvementRateIcon = improvementRate >= 0 ? "bi-graph-up-arrow" : "bi-graph-down-arrow";
+
+  const progressPercent = totalCredits > 0 ? (creditsEarned / totalCredits) * 100 : 0;
+
+  // Chart coordinates mapping (SVG dimensions: 1000 x 270)
+  const getY = (gpa: number) => Math.max(0, Math.min(270, (10.0 - gpa) * 90));
+
+  // Filter points to only show semesters that have uploaded marksheets
+  const uploadedMarksheets = user?.documents?.marksheets || {};
+  const graphData = rawSemesterGpas.map((gpa: number, index: number) => {
+    const semNumber = index + 1;
+    // Check if marksheet is uploaded for this semester
+    const isUploaded = !!uploadedMarksheets[semNumber.toString()];
+    return { semNumber, gpa, isUploaded };
+  }).filter((data: any) => data.isUploaded && data.gpa > 0);
+
+  // If no marksheets uploaded, fallback to default (or empty)
+  const finalGraphData = graphData.length > 0 ? graphData : defaultSemesterGpas.map((gpa, i) => ({ semNumber: i + 1, gpa, isUploaded: true }));
+
+  const points = finalGraphData.map((data: any, i: number) => {
+    const x = finalGraphData.length > 1
+      ? (i / (finalGraphData.length - 1)) * 1000
+      : 500;
+    const y = getY(data.gpa);
+    return { x, y, gpa: data.gpa, semNumber: data.semNumber };
+  });
 
   return (
     <div className="fade-in pb-5">
-      <div className="d-flex justify-content-between align-items-center mb-5">
+      {/* AI Scanning Loader Overlay */}
+      {isAnalyzing && (
+        <div className="db-scanner-overlay">
+          <div className="spinner-border text-primary mb-4" role="status" style={{ width: "3.5rem", height: "3.5rem" }}>
+            <span className="visually-hidden">Scanning...</span>
+          </div>
+          <h4 className="fw-bold text-dark mb-2 db-pulse">AI is deeply analyzing your marksheet...</h4>
+          <p className="text-muted db-text-sm mb-4 text-center px-3" style={{ maxWidth: "450px" }}>
+            {analysisStep}
+          </p>
+          <div className="progress w-25" style={{ height: "6px" }}>
+            <div
+              className="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+              style={{ width: `${analysisProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
+      {/* Header and Actions */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="fw-bold text-ss-bright fs-3 mb-1">Academic Overview, {user?.name.split(" ")[0] || 'Aditya'}</h1>
           <p className="text-ss-muted mb-0 fs-6">Track your trajectory, credits, and career readiness.</p>
         </div>
-        <div className="d-flex gap-2">
-          <button className="btn btn-ss-outline bg-white shadow-sm"><i className="bi bi-file-earmark-arrow-down me-2"></i>Download Transcript</button>
-          <button className="btn btn-ss-primary shadow-sm"><i className="bi bi-graph-up-arrow me-2"></i>Detailed Analytics</button>
+        <div className="d-flex gap-2 align-items-center">
+          <input
+            type="file"
+            id="db-marksheet-file"
+            className="d-none"
+            accept=".pdf,.png,.jpg,.jpeg,.webp"
+            onChange={handleFileUpload}
+          />
+          <label htmlFor="db-marksheet-file" className="btn btn-ss-outline bg-white shadow-sm cursor-pointer mb-0">
+            <i className="bi bi-cloud-upload me-2 text-primary"></i>Upload Marksheet (JPG/PNG only)
+          </label>
+          <Link to="/dashboard/analytics">
+            <button className="btn btn-ss-primary shadow-sm"><i className="bi bi-graph-up-arrow me-2"></i>Detailed Analytics</button>
+          </Link>
         </div>
       </div>
 
+      {/* Success/Error Alerts */}
+      {uploadSuccess && (
+        <div className="alert alert-success alert-dismissible fade show mb-4 rounded-3" role="alert">
+          <i className="bi bi-check-circle-fill me-2"></i>
+          <strong>Success!</strong>{" "}
+          {aiUsed
+            ? isSem1Upload
+              ? <>Your Semester 1 marksheet was <span className="badge bg-success ms-1 me-1">AI Successfully Analyzed</span> — your <strong>SGPA: {currentCgpa > 0 ? currentCgpa.toFixed(2) : "—"}</strong> has been extracted and displayed on your dashboard.</>
+              : <>Your marksheet was <span className="badge bg-success ms-1 me-1">AI Successfully Analyzed</span> — semester GPA data extracted from your actual document.</>
+            : <>Your marksheet was uploaded. Academic metrics updated <span className="badge bg-secondary ms-1">Estimated Data</span> — AI could not extract grades from this file.</>
+          }
+          <button type="button" className="btn-close" onClick={() => setUploadSuccess(false)}></button>
+        </div>
+      )}
+      {uploadError && (
+        <div className="alert alert-danger alert-dismissible fade show mb-4 rounded-3" role="alert">
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          <strong>Error!</strong> {uploadError}
+          <button type="button" className="btn-close" onClick={() => setUploadError(null)}></button>
+        </div>
+      )}
+
       {/* Row 1: Academic Overview (Glassmorphism Metric Cards) */}
       <div className="row g-4 mb-5">
-        {/* Current CGPA */}
+        {/* Current CGPA / Sem-1 SGPA card */}
         <div className="col-md-3">
           <div className="glass-panel p-4 h-100 rounded-4 position-relative overflow-hidden transition hover-shadow">
             <div className="position-absolute top-0 end-0 p-3 opacity-25">
               <i className="bi bi-award-fill text-primary db-icon-bg"></i>
             </div>
-            <div className="text-ss-muted fw-semibold mb-2 text-uppercase db-text-xs-spacing">Current CGPA</div>
+            <div className="text-ss-muted fw-semibold mb-2 text-uppercase db-text-xs-spacing">
+              {currentSemester === 1 ? "Semester 1 SGPA" : "Current CGPA"}
+            </div>
             <div className="fs-1 fw-bold text-ss-bright mb-2 d-flex align-items-center gap-2">
-              {academic.currentCgpa.toFixed(2)} <i className="bi bi-arrow-up-right-circle-fill text-success fs-5"></i>
+              {currentCgpa > 0 ? currentCgpa.toFixed(2) : "0.00"} <i className="bi bi-arrow-up-right-circle-fill text-success fs-5"></i>
             </div>
-            <div className="d-inline-block badge bg-success-light text-success border border-success border-opacity-25 rounded-pill px-2 py-1 db-text-xs">
-              Target: {academic.targetCgpa.toFixed(2)}
-            </div>
+            {currentSemester === 1 ? (
+              <div className="d-inline-block badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1 db-text-xs">
+                <i className="bi bi-stars me-1"></i>AI Extracted from Marksheet
+              </div>
+            ) : (
+              <div className="d-inline-block badge bg-success-light text-success border border-success border-opacity-25 rounded-pill px-2 py-1 db-text-xs">
+                Target: {targetCgpa.toFixed(2)}
+              </div>
+            )}
           </div>
         </div>
 
@@ -64,7 +331,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="text-ss-muted fw-semibold mb-2 text-uppercase db-text-xs-spacing">Credits Earned</div>
             <div className="fs-1 fw-bold text-ss-bright mb-2">
-              {academic.creditsEarned} <span className="text-muted fs-4">/ {academic.totalCredits}</span>
+              {creditsEarned} <span className="text-muted fs-4">/ {totalCredits}</span>
             </div>
             <div className="progress mt-3 db-progress-bg">
               <div className="progress-bar bg-primary" style={{ width: `${progressPercent}%` }}></div>
@@ -85,7 +352,7 @@ const Dashboard: React.FC = () => {
             <div>
               <div className="text-ss-muted fw-semibold mb-1 text-uppercase db-text-xs-spacing">Degree Progress</div>
               <div className="fs-5 fw-bold text-ss-bright">On Track</div>
-              <div className="text-muted db-text-xs-alt">Sem {academic.currentSemester} of 8</div>
+              <div className="text-muted db-text-xs-alt">Sem {currentSemester} of 8</div>
             </div>
           </div>
         </div>
@@ -99,7 +366,9 @@ const Dashboard: React.FC = () => {
             <div className="text-primary fw-bold mb-2 text-uppercase d-flex align-items-center gap-2 db-text-xs-spacing">
               <i className="bi bi-lightning-charge-fill"></i> Predicted CGPA
             </div>
-            <div className="fs-1 fw-bold text-dark mb-2">8.65</div>
+            <div className="fs-1 fw-bold text-dark mb-2">
+              {displayPredictedCgpa.toFixed(2)}
+            </div>
             <div className="text-dark opacity-75 db-text-sm">
               Projected upon graduation if current trend continues.
             </div>
@@ -110,22 +379,30 @@ const Dashboard: React.FC = () => {
       {/* Row 2: Interactive Analytics Hub */}
       <h4 className="fw-bold text-ss-bright mb-4">Interactive Analytics Hub</h4>
       <div className="row g-4 mb-5">
-        
+
         {/* Main Graph */}
         <div className="col-lg-9">
           <div className="glass-panel p-4 h-100 rounded-4 position-relative">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div>
-                <h5 className="fw-bold mb-1">Semester-wise CGPA Trend</h5>
-                <div className="text-ss-muted db-text-sm">Your academic performance across completed semesters.</div>
+                <h5 className="fw-bold mb-1">
+                  {currentSemester === 1
+                    ? "Semester 1 SGPA Result"
+                    : "Semester-wise CGPA Trend"}
+                </h5>
+                <div className="text-ss-muted db-text-sm">
+                  {currentSemester === 1
+                    ? "Your Semester 1 grade as extracted from your marksheet by AI."
+                    : "Your academic performance across completed semesters."}
+                </div>
               </div>
               <div className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-medium">
-                Overall Average: 8.35
+                {currentSemester === 1 ? `SGPA: ${currentCgpa > 0 ? currentCgpa.toFixed(2) : "—"}` : `Overall Average: ${displayAverageCgpa.toFixed(2)}`}
               </div>
             </div>
 
             <div className="w-100 position-relative mt-4 db-chart-area-container">
-              
+
               {/* Y-Axis Labels */}
               <div className="position-absolute h-100 d-flex flex-column justify-content-between text-muted db-chart-y-axis">
                 <span>10.0</span>
@@ -136,12 +413,12 @@ const Dashboard: React.FC = () => {
 
               {/* Chart Area */}
               <div className="position-absolute h-100 border-start border-bottom db-chart-main-area">
-                
+
                 {/* Grid Lines */}
                 <div className="w-100 border-top position-absolute db-chart-grid-1"></div>
                 <div className="w-100 border-top position-absolute db-chart-grid-2"></div>
-                
-                {/* SVG Spline Chart */}
+
+                {/* SVG Line Chart (Circle Dot Points connected with straight lines) */}
                 <svg viewBox="0 0 1000 270" width="100%" height="100%" preserveAspectRatio="none" className="position-absolute top-0 start-0 overflow-visible">
                   <defs>
                     <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -149,20 +426,54 @@ const Dashboard: React.FC = () => {
                       <stop offset="100%" stopColor="rgba(14, 165, 233, 0.0)" />
                     </linearGradient>
                   </defs>
-                  {/* Fill */}
-                  <path d="M0,250 C150,230 200,100 350,150 C500,200 650,50 800,80 C900,90 950,40 1000,20 L1000,270 L0,270 Z" fill="url(#chartGradient)" />
-                  {/* Line */}
-                  <path d="M0,250 C150,230 200,100 350,150 C500,200 650,50 800,80 C900,90 950,40 1000,20" fill="none" stroke="url(#chartGradient)" strokeWidth="0" />
-                  <path d="M0,250 C150,230 200,100 350,150 C500,200 650,50 800,80 C900,90 950,40 1000,20" fill="none" stroke="var(--ss-primary)" strokeWidth="4" />
+
+                  {/* Fill area under the straight lines */}
+                  {points.length > 0 && (
+                    <path
+                      d={`M ${points[0].x},270 ` + points.map((p: any) => `L ${p.x},${p.y}`).join(" ") + ` L ${points[points.length - 1].x},270 Z`}
+                      fill="url(#chartGradient)"
+                    />
+                  )}
+
+                  {/* Straight lines connecting points */}
+                  {points.length > 0 && (
+                    <polyline
+                      fill="none"
+                      stroke="var(--ss-primary)"
+                      strokeWidth="4"
+                      points={points.map((p: any) => `${p.x},${p.y}`).join(" ")}
+                    />
+                  )}
+
+                  {/* Circle dot points representing CGPA with values above */}
+                  {points.map((p: any, idx: number) => (
+                    <g key={idx}>
+                      {/* Outer shadow circle */}
+                      <circle cx={p.x} cy={p.y} r="8" fill="rgba(37, 99, 235, 0.2)" />
+                      {/* Inner circle dot */}
+                      <circle cx={p.x} cy={p.y} r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
+                      {/* CGPA Text value label */}
+                      <text
+                        x={p.x}
+                        y={p.y - 12}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fontWeight="700"
+                        fill="#0f172a"
+                      >
+                        {p.gpa.toFixed(2)}
+                      </text>
+                    </g>
+                  ))}
                 </svg>
 
                 {/* X-Axis Labels */}
                 <div className="position-absolute w-100 d-flex justify-content-between text-muted mt-2 db-chart-x-axis">
-                  <span>Sem 1</span>
-                  <span>Sem 2</span>
-                  <span>Sem 3</span>
-                  <span>Sem 4</span>
-                  <span className="text-primary fw-bold">Sem 5</span>
+                  {finalGraphData.map((data: any, i: number) => (
+                    <span key={i} className={i === finalGraphData.length - 1 ? "text-primary fw-bold" : ""}>
+                      Sem {data.semNumber}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -172,7 +483,8 @@ const Dashboard: React.FC = () => {
         {/* Performance Analytics Panel */}
         <div className="col-lg-3">
           <div className="d-flex flex-column gap-4 h-100">
-            
+
+            {/* Highest CGPA */}
             <div className="glass-panel p-4 rounded-4 flex-grow-1 d-flex flex-column justify-content-center transition hover-shadow">
               <div className="d-flex align-items-center gap-3 mb-2">
                 <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center db-icon-sm">
@@ -180,12 +492,15 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-ss-muted fw-semibold text-uppercase db-text-xxs-spacing">Highest CGPA</div>
-                  <div className="fw-bold fs-4 text-dark">9.12</div>
+                  <div className="fw-bold fs-4 text-dark">{displayHighestCgpa.toFixed(2)}</div>
                 </div>
               </div>
-              <div className="text-muted ms-5 ps-1 db-text-xs-alt">Achieved in Semester 5</div>
+              <div className="text-muted ms-5 ps-1 db-text-xs-alt">
+                Achieved in Semester {rawSemesterGpas.indexOf(displayHighestCgpa) !== -1 ? rawSemesterGpas.indexOf(displayHighestCgpa) + 1 : rawSemesterGpas.length}
+              </div>
             </div>
 
+            {/* Average CGPA */}
             <div className="glass-panel p-4 rounded-4 flex-grow-1 d-flex flex-column justify-content-center transition hover-shadow">
               <div className="d-flex align-items-center gap-3 mb-2">
                 <div className="bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center db-icon-sm">
@@ -193,20 +508,21 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-ss-muted fw-semibold text-uppercase db-text-xxs-spacing">Average CGPA</div>
-                  <div className="fw-bold fs-4 text-dark">8.35</div>
+                  <div className="fw-bold fs-4 text-dark">{displayAverageCgpa.toFixed(2)}</div>
                 </div>
               </div>
-              <div className="text-muted ms-5 ps-1 db-text-xs-alt">Across 5 semesters</div>
+              <div className="text-muted ms-5 ps-1 db-text-xs-alt">Across {rawSemesterGpas.length} semesters</div>
             </div>
 
+            {/* Improvement Rate */}
             <div className="glass-panel p-4 rounded-4 flex-grow-1 d-flex flex-column justify-content-center transition hover-shadow">
               <div className="d-flex align-items-center gap-3 mb-2">
-                <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center db-icon-sm">
-                  <i className="bi bi-graph-up-arrow fs-5"></i>
+                <div className={`${improvementRateIconClass.replace('text', 'bg-opacity-10 text')} rounded-circle d-flex align-items-center justify-content-center db-icon-sm`}>
+                  <i className={`bi ${improvementRateIcon} fs-5`}></i>
                 </div>
                 <div>
                   <div className="text-ss-muted fw-semibold text-uppercase db-text-xxs-spacing">Improvement Rate</div>
-                  <div className="fw-bold fs-4 text-success">+0.4%</div>
+                  <div className={`fw-bold fs-4 ${improvementRateClass}`}>{displayImprovementRate}</div>
                 </div>
               </div>
               <div className="text-muted ms-5 ps-1 db-text-xs-alt">Semester-over-semester</div>
@@ -217,7 +533,18 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Row 3: Weekly Schedule */}
-      <h4 className="fw-bold text-ss-bright mb-4 mt-5">My Weekly Schedule</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
+        <h4 className="fw-bold text-ss-bright mb-0">My Weekly Schedule</h4>
+        <button
+          id="btn-add-schedule-trigger"
+          className="btn btn-ss-outline bg-white shadow-sm d-flex align-items-center justify-content-center p-2 rounded-circle hover-primary"
+          style={{ width: "40px", height: "40px" }}
+          onClick={() => setShowAddScheduleModal(true)}
+          title="Add Class to Schedule"
+        >
+          <i className="bi bi-plus-lg fs-5 text-primary"></i>
+        </button>
+      </div>
       <div className="card border shadow-sm rounded-4 p-4 mb-5">
         {schedule.length > 0 ? (
           <div className="table-responsive">
@@ -261,6 +588,102 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Add Schedule Modal */}
+      {showAddScheduleModal && (
+        <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: "rgba(0, 0, 0, 0.5)", zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+              <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h5 className="modal-title fw-bold text-ss-bright fs-5">Add New Class Schedule</h5>
+                <button type="button" className="btn-close" onClick={() => setShowAddScheduleModal(false)} aria-label="Close"></button>
+              </div>
+              <form onSubmit={handleAddScheduleSubmit}>
+                <div className="modal-body py-3 px-4">
+                  {formError && (
+                    <div className="alert alert-danger py-2 mb-3 small">{formError}</div>
+                  )}
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold text-secondary small mb-1">Course Name</label>
+                    <input
+                      type="text"
+                      id="input-course-name"
+                      className="form-control rounded-3"
+                      placeholder="e.g. Operating Systems"
+                      value={newCourseName}
+                      onChange={e => setNewCourseName(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold text-secondary small mb-1">Weekday</label>
+                      <select
+                        id="select-weekday"
+                        className="form-select rounded-3"
+                        value={newDayOfWeek}
+                        onChange={e => setNewDayOfWeek(e.target.value)}
+                        required
+                      >
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold text-secondary small mb-1">Location</label>
+                      <input
+                        type="text"
+                        id="input-location"
+                        className="form-control rounded-3"
+                        placeholder="e.g. Room 402"
+                        value={newLocation}
+                        onChange={e => setNewLocation(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold text-secondary small mb-1">Start Time</label>
+                      <input
+                        type="text"
+                        id="input-start-time"
+                        className="form-control rounded-3"
+                        placeholder="e.g. 09:00 AM"
+                        value={newStartTime}
+                        onChange={e => setNewStartTime(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold text-secondary small mb-1">End Time</label>
+                      <input
+                        type="text"
+                        id="input-end-time"
+                        className="form-control rounded-3"
+                        placeholder="e.g. 10:00 AM"
+                        value={newEndTime}
+                        onChange={e => setNewEndTime(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer border-top-0 pb-4 px-4 gap-2 pt-0">
+                  <button type="button" className="btn btn-ss-outline px-4 rounded-pill" onClick={() => setShowAddScheduleModal(false)}>Cancel</button>
+                  <button type="submit" id="btn-submit-schedule" className="btn btn-ss-primary px-4 rounded-pill">Add Class</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

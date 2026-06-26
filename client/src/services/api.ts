@@ -27,10 +27,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (
+      error.response?.status === 401 ||
+      (error.response?.status === 404 && error.response?.data?.error === "User not found")
+    ) {
       localStorage.removeItem("shikshasetu_token");
       localStorage.removeItem("shikshasetu_user");
-      // Redirect to login if token is invalid/expired
+      // Redirect to login if token is invalid/expired or user is missing in DB
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
