@@ -14,9 +14,17 @@ import "./DetailedAnalytics.css";
 
 const DetailedAnalytics: React.FC = () => {
   const { user } = useAuth();
-  
+
+  const profile = user?.academicProfile ?? {
+    currentCgpa: 0,
+    targetCgpa: 9.0,
+    creditsEarned: 0,
+    totalCredits: 160,
+    currentSemester: 1,
+    subjects: [],
+  };
+
   // What-If Calculator State
-  const profile = user?.academicProfile || {};
   const currentCgpa = profile.currentCgpa || 0;
   const creditsEarned = profile.creditsEarned || 0;
   const totalCredits = profile.totalCredits || 160;

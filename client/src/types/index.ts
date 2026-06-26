@@ -1,20 +1,26 @@
 // ─── User Types ──────────────────────────────────────────
+export interface AcademicProfile {
+  currentCgpa: number;
+  targetCgpa: number;
+  creditsEarned: number;
+  totalCredits: number;
+  currentSemester: number;
+  predictedCgpa?: number;
+  highestCgpa?: number;
+  averageCgpa?: number;
+  semesterGpas?: number[];
+  subjects?: Array<{
+    name: string;
+    score: number;
+  }>;
+}
+
 export interface User {
   _id: string;
   name: string;
   email: string;
   isProfileComplete?: boolean;
-  academicProfile?: {
-    currentCgpa: number;
-    targetCgpa: number;
-    creditsEarned: number;
-    totalCredits: number;
-    currentSemester: number;
-    predictedCgpa?: number;
-    highestCgpa?: number;
-    averageCgpa?: number;
-    semesterGpas?: number[];
-  };
+  academicProfile?: AcademicProfile;
   profileDetails?: {
     category?: string;
     income?: string;
