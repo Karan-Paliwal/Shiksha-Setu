@@ -6,6 +6,7 @@ export const saveSchedule = async (req: AuthRequest, res: Response): Promise<voi
   try {
     const userId = req.userId;
     const { classes } = req.body;
+    console.log("Saving schedule for user:", userId, "Payload classes:", JSON.stringify(classes, null, 2));
 
     let schedule = await Schedule.findOne({ userId });
 

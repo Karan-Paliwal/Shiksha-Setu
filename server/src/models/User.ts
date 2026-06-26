@@ -6,6 +6,22 @@ export interface IAcademicProfile {
   creditsEarned: number;
   totalCredits: number;
   currentSemester: number;
+  predictedCgpa?: number;
+  highestCgpa?: number;
+  averageCgpa?: number;
+  semesterGpas?: number[];
+  subjects?: { name: string; score: number }[];
+}
+
+export interface IProfileDetails {
+  category?: string;
+  income?: string;
+  interests?: string;
+}
+
+export interface IDocuments {
+  marksheets: Map<string, string>; // Maps semester to url
+  timetable?: string;
 }
 
 export interface IUser extends Document {
@@ -14,6 +30,9 @@ export interface IUser extends Document {
   password: string;
   isProfileComplete: boolean;
   academicProfile?: IAcademicProfile;
+  profileDetails?: IProfileDetails;
+  documents?: IDocuments;
+  profilePicture?: string;
   createdAt: Date;
 }
 
@@ -51,6 +70,29 @@ const UserSchema = new Schema<IUser>({
     creditsEarned: { type: Number, default: 0 },
     totalCredits: { type: Number, default: 0 },
     currentSemester: { type: Number, default: 1 },
+    predictedCgpa: { type: Number, default: 0 },
+    highestCgpa: { type: Number, default: 0 },
+    averageCgpa: { type: Number, default: 0 },
+    semesterGpas: { type: [Number], default: [] },
+    subjects: [
+      {
+        name: { type: String, required: true },
+        score: { type: Number, required: true },
+      }
+    ]
+  },
+  profileDetails: {
+    category: { type: String, default: "" },
+    income: { type: String, default: "" },
+    interests: { type: String, default: "" },
+  },
+  documents: {
+    marksheets: { type: Map, of: String, default: {} },
+    timetable: { type: String, default: "" },
+  },
+  profilePicture: {
+    type: String,
+    default: "",
   }
 });
 

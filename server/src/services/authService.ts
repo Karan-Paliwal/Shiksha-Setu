@@ -41,6 +41,7 @@ export const signupUser = async (
       name: user.name,
       email: user.email,
       createdAt: user.createdAt,
+      profilePicture: user.profilePicture,
     },
     token,
   };
@@ -71,6 +72,7 @@ export const loginUser = async (
       name: user.name,
       email: user.email,
       createdAt: user.createdAt,
+      profilePicture: user.profilePicture,
     },
     token,
   };
