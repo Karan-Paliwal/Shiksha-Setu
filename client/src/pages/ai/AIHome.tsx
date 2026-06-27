@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import api from "../../services/api";
 import "./AIHome.css";
 
 interface Message {
@@ -12,14 +15,45 @@ const AIHome: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSendMessage = (e?: React.FormEvent) => {
+  // Timer states
+  const POMODORO_TIME = 25 * 60;
+  const [timeLeft, setTimeLeft] = useState(POMODORO_TIME);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isTimerRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setIsTimerRunning(false);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning, timeLeft]);
+
+  const toggleTimer = () => setIsTimerRunning(!isTimerRunning);
+  const resetTimer = () => {
+    setIsTimerRunning(false);
+    setTimeLeft(POMODORO_TIME);
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() && !selectedFile) return;
 
     const newUserMsg: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: inputValue || (selectedFile ? `[Attached File: ${selectedFile.name}]` : ""),
       isAi: false,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -28,21 +62,57 @@ const AIHome: React.FC = () => {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI thinking and replying
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      if (inputValue.trim()) {
+        formData.append("prompt", inputValue);
+      } else {
+        formData.append("prompt", `Please analyze this file: ${selectedFile?.name}`);
+      }
+      
+      if (selectedFile) {
+        formData.append("file", selectedFile);
+      }
+      
+      setSelectedFile(null);
+
+      const response = await api.post("/ai/chat", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
       const newAiMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I am your Shiksha AI Assistant! I'm currently running in preview mode, but I'm here to help you solve your academic doubts.",
+        text: response.data.response,
         isAi: true,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, newAiMsg]);
+    } catch (error) {
+      console.error("AI Chat Error:", error);
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Sorry, I encountered an error connecting to the AI assistant.",
+        isAi: true,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setInputValue(suggestion);
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setInputValue(`I need help with ${category}. `);
   };
 
   return (
@@ -65,18 +135,27 @@ const AIHome: React.FC = () => {
             <div className="p-4 border-bottom">
               <h6 className="text-muted fw-bold mb-3 ai-text-xs-spacing">DOUBT CATEGORIES</h6>
               <div className="d-flex flex-column gap-1">
-                <div className="d-flex justify-content-between align-items-center p-2 rounded-3 bg-primary bg-opacity-10 text-primary cursor-pointer fw-medium transition">
+                <div 
+                  className="d-flex justify-content-between align-items-center p-2 rounded-3 bg-primary bg-opacity-10 text-primary cursor-pointer fw-medium transition"
+                  onClick={() => handleCategoryClick("General AI")}
+                >
                   <div className="d-flex align-items-center gap-2">
                     <i className="bi bi-robot"></i> General AI Assistant
                   </div>
                   <i className="bi bi-chevron-right small"></i>
                 </div>
-                <div className="d-flex justify-content-between align-items-center p-2 rounded-3 text-dark hover-bg-light cursor-pointer transition">
+                <div 
+                  className="d-flex justify-content-between align-items-center p-2 rounded-3 text-dark hover-bg-light cursor-pointer transition"
+                  onClick={() => handleCategoryClick("Computer Science")}
+                >
                   <div className="d-flex align-items-center gap-2">
                     <i className="bi bi-laptop"></i> Computer Science
                   </div>
                 </div>
-                <div className="d-flex justify-content-between align-items-center p-2 rounded-3 text-dark hover-bg-light cursor-pointer transition">
+                <div 
+                  className="d-flex justify-content-between align-items-center p-2 rounded-3 text-dark hover-bg-light cursor-pointer transition"
+                  onClick={() => handleCategoryClick("Mathematics")}
+                >
                   <div className="d-flex align-items-center gap-2">
                     <i className="bi bi-calculator"></i> Mathematics
                   </div>
@@ -89,7 +168,7 @@ const AIHome: React.FC = () => {
               <h6 className="text-muted fw-bold mb-3 ai-text-xs-spacing">RECENT SESSIONS</h6>
               {messages.length > 0 ? (
                 <div className="d-flex flex-column gap-3">
-                  <div className="d-flex gap-3 cursor-pointer p-2 rounded hover-bg-light transition">
+                  <div className="d-flex gap-3 cursor-pointer p-2 rounded hover-bg-light transition" onClick={() => {}}>
                     <i className="bi bi-chat-left-text text-primary mt-1"></i>
                     <div>
                       <div className="fw-medium text-dark text-truncate ai-text-base">Current Session</div>
@@ -161,7 +240,13 @@ const AIHome: React.FC = () => {
                     <div 
                       className={`p-4 shadow-sm ${msg.isAi ? 'bg-white border text-dark rounded-4 rounded-top-0' : 'bg-ss-primary text-white rounded-4 rounded-end-0'} ai-max-w-85`}
                     >
-                      <p className="mb-0 ai-text-md-lh">{msg.text}</p>
+                      <div className="mb-0 ai-text-md-lh">
+                        {msg.isAi ? (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+                        ) : (
+                          <p className="mb-0">{msg.text}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="text-muted mt-1 px-2 ai-text-xxs">{msg.time}</div>
                   </div>
@@ -188,8 +273,28 @@ const AIHome: React.FC = () => {
 
           {/* Input Area */}
           <div className="p-4 border-top bg-white z-1 shadow-sm">
+            {selectedFile && (
+              <div className="mb-2 ms-3 d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1">
+                <span className="small text-truncate" style={{ maxWidth: '200px' }}>
+                  <i className="bi bi-file-earmark me-2 text-primary"></i>
+                  {selectedFile.name}
+                </span>
+                <button type="button" className="btn-close ms-2" style={{ fontSize: '0.65rem' }} onClick={() => setSelectedFile(null)}></button>
+              </div>
+            )}
             <form onSubmit={handleSendMessage} className="border rounded-pill p-2 d-flex align-items-center bg-white shadow-sm hover-shadow transition">
-              <button type="button" className="btn btn-link text-muted p-2 rounded-circle hover-bg-light ms-1 transition">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                style={{ display: "none" }} 
+                onChange={handleFileChange} 
+                accept="image/*,.pdf,.doc,.docx,.txt"
+              />
+              <button 
+                type="button" 
+                className="btn btn-link text-muted p-2 rounded-circle hover-bg-light ms-1 transition"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <i className="bi bi-paperclip fs-5"></i>
               </button>
               <input 
@@ -200,8 +305,8 @@ const AIHome: React.FC = () => {
               />
               <button 
                 type="submit" 
-                className={`btn btn-ss-primary text-white rounded-circle d-flex align-items-center justify-content-center me-1 transition ${!inputValue.trim() ? 'opacity-50' : ''} ai-icon-sm`}
-                disabled={!inputValue.trim() || isTyping}
+                className={`btn btn-ss-primary text-white rounded-circle d-flex align-items-center justify-content-center me-1 transition ${(!inputValue.trim() && !selectedFile) ? 'opacity-50' : ''} ai-icon-sm`}
+                disabled={(!inputValue.trim() && !selectedFile) || isTyping}
               >
                 <i className="bi bi-send-fill fs-6"></i>
               </button>
@@ -220,11 +325,23 @@ const AIHome: React.FC = () => {
             <div className="text-primary fw-bold mb-2 d-flex align-items-center justify-content-center gap-2 ai-text-xs-spacing">
               <i className="bi bi-stopwatch"></i> REVISION TIMER
             </div>
-            <div className="fw-black text-dark my-3 ai-timer-text">25:00</div>
-            <div className="text-muted fst-italic mb-3 ai-text-xs-alt">Pomodoro Session Ready</div>
+            <div className="fw-black text-dark my-3 ai-timer-text">{formatTime(timeLeft)}</div>
+            <div className="text-muted fst-italic mb-3 ai-text-xs-alt">
+              {isTimerRunning ? "Focus Session in Progress" : "Pomodoro Session Ready"}
+            </div>
             <div className="d-flex gap-2 justify-content-center">
-              <button className="btn btn-primary rounded-pill px-4 fw-medium shadow-sm transition">Start</button>
-              <button className="btn btn-light border rounded-pill px-4 fw-medium text-dark bg-white transition hover-bg-light">Reset</button>
+              <button 
+                className={`btn ${isTimerRunning ? 'btn-warning text-dark' : 'btn-primary'} rounded-pill px-4 fw-medium shadow-sm transition`}
+                onClick={toggleTimer}
+              >
+                {isTimerRunning ? "Pause" : "Start"}
+              </button>
+              <button 
+                className="btn btn-light border rounded-pill px-4 fw-medium text-dark bg-white transition hover-bg-light"
+                onClick={resetTimer}
+              >
+                Reset
+              </button>
             </div>
           </div>
 

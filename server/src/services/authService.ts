@@ -55,7 +55,7 @@ export const loginUser = async (
   // Find user
   const user = await User.findOne({ email });
   if (!user) {
-    throw new Error("Invalid email or password");
+    throw new Error("User not found!");
   }
 
   // Compare password

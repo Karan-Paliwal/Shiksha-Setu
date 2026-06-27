@@ -1,4 +1,4 @@
-import Groq from "groq-sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import path from "path";
 // Load .env from project root — works whether running from server/ or root
@@ -6,8 +6,8 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 dotenv.config(); // fallback
 
-const groqApiKey = process.env.GROQ_API_KEY || "";
-const groq = new Groq({ apiKey: groqApiKey });
+const geminiApiKey = process.env.GEMINI_API_KEY || "";
+const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
 
 export interface MarksheetAnalysisResult {
   sgpa: number | null;       // GPA for the specific semester
@@ -25,8 +25,8 @@ export const analyzeMarksheetWithAI = async (
   fileUrl: string,
   semester: number
 ): Promise<MarksheetAnalysisResult | null> => {
-  if (!groqApiKey) {
-    console.warn("[AI Scanner] GROQ_API_KEY is not set. Skipping AI analysis.");
+  if (!genAI) {
+    console.warn("[AI Scanner] GEMINI_API_KEY is not set. Skipping AI analysis.");
     return null;
   }
 
@@ -50,11 +50,12 @@ export const analyzeMarksheetWithAI = async (
     const base64Data = buffer.toString("base64");
     const contentType = response.headers.get("content-type") || "image/jpeg";
 
-    // Groq Vision supports image/* MIME types inline
-    // For PDFs we use image/jpeg as fallback (Cloudinary auto-converts first page)
-    const mimeType = contentType.startsWith("image/") ? contentType : "image/jpeg";
-
-    console.log(`[AI Scanner] Sending to Groq Llama-4-Scout vision model (mime: ${mimeType})...`);
+    // Gemini natively supports image/* and application/pdf
+    let mimeType = contentType;
+    if (fileUrl.toLowerCase().endsWith(".pdf")) {
+      mimeType = "application/pdf";
+    }
+    console.log(`[AI Scanner] Sending to Gemini (gemini-2.5-flash) model (mime: ${mimeType})...`);
 
     const prompt = `You are an expert Indian university academic document analyzer with deep knowledge of Indian grading systems.
 
@@ -88,35 +89,22 @@ Rules:
 - If a value is not clearly visible, set it to null
 - NEVER guess or invent numbers — only return what is clearly printed in the document`;
 
-    const completion = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages: [
-        {
-          role: "system",
-          content: "You are a precise data extraction tool. You ALWAYS respond with ONLY valid JSON. No markdown, no explanation, no code fences. Just the raw JSON object.",
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${mimeType};base64,${base64Data}`,
-              },
-            },
-            {
-              type: "text",
-              text: prompt,
-            },
-          ],
-        },
-      ],
-      temperature: 0.1,   // Low temperature for precise extraction
-      max_tokens: 512,
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const rawText = completion.choices[0]?.message?.content || "";
-    console.log(`[AI Scanner] Raw Groq response:`, rawText);
+    const parts = [
+      { text: "You are a precise data extraction tool. You ALWAYS respond with ONLY valid JSON. No markdown, no explanation, no code fences. Just the raw JSON object." },
+      { text: prompt },
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: mimeType,
+        },
+      },
+    ];
+
+    const completion = await model.generateContent(parts);
+    const rawText = completion.response.text() || "";
+    console.log(`[AI Scanner] Raw Gemini response:`, rawText);
 
     // ── Robust JSON extraction ─────────────────────────────────────────────────
     // Find the first {...} block in the response — handles text before/after JSON
@@ -136,7 +124,7 @@ Rules:
     }
 
     if (!jsonString) {
-      console.error("[AI Scanner] Could not extract JSON from Groq response.");
+      console.error("[AI Scanner] Could not extract JSON from Gemini response.");
       return null;
     }
 
@@ -150,14 +138,19 @@ Rules:
       allSemesterGpas: parsed.allSemesterGpas && typeof parsed.allSemesterGpas === "object"
         ? parsed.allSemesterGpas
         : null,
-      subjects: Array.isArray(parsed.subjects) ? parsed.subjects : null,
+      subjects: Array.isArray(parsed.subjects) 
+        ? parsed.subjects.map(s => ({
+            name: s.name ? String(s.name) : "Unknown",
+            score: Number(s.score) || 0
+          })).filter(s => s.score > 0)
+        : null,
     };
 
     console.log(`[AI Scanner] ✅ Extracted result:`, result);
     return result;
 
   } catch (error: any) {
-    console.error("[AI Scanner] ❌ Error during Groq analysis:", error.message || error);
+    console.error("[AI Scanner] ❌ Error during Gemini analysis:", error.message || error);
     return null;
   }
 };
