@@ -7,6 +7,7 @@ const Signup: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -60,14 +61,25 @@ const Signup: React.FC = () => {
           </div>
           <div className="mb-4">
             <label className="form-label">Password</label>
-            <input
-              type="password"
-              className="form-control auth-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+            <div className="position-relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="form-control auth-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                className="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted text-decoration-none"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ zIndex: 10 }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+              </button>
+            </div>
           </div>
           <button type="submit" className="btn-ss-primary w-100 mb-3" disabled={isLoading}>
             {isLoading ? "Creating Account..." : "Sign Up"}

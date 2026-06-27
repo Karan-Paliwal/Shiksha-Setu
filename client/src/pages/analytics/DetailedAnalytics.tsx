@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-  Tooltip
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
 } from "recharts";
+
 import "./DetailedAnalytics.css";
 
 const DetailedAnalytics: React.FC = () => {
@@ -29,22 +30,28 @@ const DetailedAnalytics: React.FC = () => {
   const creditsEarned = profile.creditsEarned || 0;
   const totalCredits = profile.totalCredits || 160;
   const targetCgpa = profile.targetCgpa || 9.0;
-  
+
   const [expectedSgpa, setExpectedSgpa] = useState<number>(8.0);
   const [projectedCgpa, setProjectedCgpa] = useState<number>(currentCgpa);
 
   // Real subjects from database, with fallback to mock data
   const realSubjects = profile.subjects || [];
-  
-  const domainData = realSubjects.length > 0 
-    ? realSubjects.map((s: any) => ({ subject: s.name, A: s.score, fullMark: 100 }))
-    : [
-        { subject: 'Programming', A: Math.min(100, (currentCgpa || 8.0) * 10 + 5), fullMark: 100 },
-        { subject: 'Data Science', A: Math.min(100, (currentCgpa || 8.0) * 10 - 10), fullMark: 100 },
-        { subject: 'Core CS', A: Math.min(100, (currentCgpa || 8.0) * 10 + 2), fullMark: 100 },
-        { subject: 'Hardware/Systems', A: Math.min(100, (currentCgpa || 8.0) * 10 - 15), fullMark: 100 },
-        { subject: 'Communication', A: Math.min(100, (currentCgpa || 8.0) * 10 + 10), fullMark: 100 },
-      ];
+
+  // SGPA Trend Data & Critical Semester Logic
+  const semesterGpas = profile.semesterGpas && profile.semesterGpas.length > 0 
+    ? profile.semesterGpas 
+    : [7.5, 8.2, 6.8, 8.5, 8.1]; // Mock data if empty
+    
+  const trendData = semesterGpas.map((sgpa, index) => ({
+    name: `Sem ${index + 1}`,
+    sgpa: sgpa
+  }));
+
+  // Identify Critical Semester (lowest SGPA)
+  const lowestSgpa = Math.min(...semesterGpas);
+  const criticalSemIndex = semesterGpas.indexOf(lowestSgpa);
+
+
 
   // Calculate What-If scenario
   useEffect(() => {
@@ -78,38 +85,51 @@ const DetailedAnalytics: React.FC = () => {
       </div>
 
       <div className="row g-4">
-        {/* Radar Chart Panel */}
+        {/* Performance Trend & Critical Semester */}
         <div className="col-lg-7">
-          <div className="analytics-card p-4 rounded-4 h-100">
-            <div className="d-flex align-items-center mb-4">
-              <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
-                <i className="bi bi-radar"></i>
+          <div className="analytics-card p-4 rounded-4 h-100 d-flex flex-column">
+            <div className="d-flex align-items-center mb-3">
+              <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                <i className="bi bi-graph-up"></i>
               </div>
-              <h4 className="fw-bold text-dark mb-0">Subject Domain Breakdown</h4>
+              <h4 className="fw-bold text-dark mb-0">SGPA Trend & Critical Semester</h4>
             </div>
-            <p className="text-muted small">
-              {realSubjects.length > 0 
-                ? "Real subjects extracted directly from your uploaded marksheet."
-                : "Your skill proficiency based on historical grades across core domains. Upload a marksheet to see real subjects."}
-            </p>
             
-            <div className="radar-chart-container mt-4">
+            <div className="mb-4 d-flex justify-content-between align-items-center bg-light rounded-3 p-3 border-start border-danger border-4">
+               <div>
+                 <span className="text-muted d-block small fw-bold text-uppercase mb-1">Critical Semester Identified</span>
+                 <span className="text-dark fw-bold">Semester {criticalSemIndex + 1}</span> 
+                 <span className="text-muted ms-2">(SGPA: {lowestSgpa.toFixed(2)})</span>
+               </div>
+               <div className="text-end">
+                 <span className="badge bg-danger bg-opacity-10 text-danger rounded-pill border border-danger">Requires Attention</span>
+               </div>
+            </div>
+
+            <p className="text-muted small mb-4">
+              Your semester-by-semester performance trend. Semester {criticalSemIndex + 1} had the lowest performance and may require a review of past study habits or foundational concepts from that period.
+            </p>
+
+            <div className="flex-grow-1 mt-2" style={{ minHeight: '300px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={domainData}>
-                  <PolarGrid stroke="#e2e8f0" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 12, fontWeight: 500 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6c757d', fontSize: 12}} dy={10} />
+                  <YAxis domain={[0, 10]} axisLine={false} tickLine={false} tick={{fill: '#6c757d', fontSize: 12}} dx={-10} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                    itemStyle={{ color: '#198754', fontWeight: 'bold' }}
                   />
-                  <Radar
-                    name="Proficiency (%)"
-                    dataKey="A"
-                    stroke="#0ea5e9"
-                    fill="#0ea5e9"
-                    fillOpacity={0.5}
+                  <Line 
+                    type="monotone" 
+                    dataKey="sgpa" 
+                    name="SGPA" 
+                    stroke="#198754" 
+                    strokeWidth={3}
+                    activeDot={{ r: 6, fill: '#198754', stroke: '#fff', strokeWidth: 2 }}
+                    dot={{ r: 4, fill: '#fff', stroke: '#198754', strokeWidth: 2 }}
                   />
-                </RadarChart>
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
@@ -119,13 +139,13 @@ const DetailedAnalytics: React.FC = () => {
         <div className="col-lg-5">
           <div className="analytics-card p-4 rounded-4 h-100 d-flex flex-column">
             <div className="d-flex align-items-center mb-4">
-              <div className="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
+              <div className="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
                 <i className="bi bi-magic"></i>
               </div>
               <h4 className="fw-bold text-dark mb-0">"What-If" Scenario Planner</h4>
             </div>
-            <p className="text-muted small">Slide to predict how your upcoming semester performance will impact your final CGPA.</p>
-            
+            <p className="text-muted small">Slide to predict how your upcomming semester performance will impact your final CGPA.</p>
+
             <div className="flex-grow-1 d-flex flex-column justify-content-center my-4">
               <div className="text-center mb-5">
                 <div className="text-uppercase fw-bold text-muted small mb-2 letter-spacing-1">Current CGPA</div>
@@ -134,15 +154,15 @@ const DetailedAnalytics: React.FC = () => {
 
               <div className="px-3 mb-5">
                 <div className="d-flex justify-content-between mb-2">
-                  <span className="fw-semibold text-secondary">Expected Future SGPA</span>
+                  <span className="fw-semibold text-secondary">Expected Next SGPA</span>s
                   <span className="fw-bold text-primary fs-5">{expectedSgpa.toFixed(1)}</span>
                 </div>
-                <input 
-                  type="range" 
-                  min="4.0" 
-                  max="10.0" 
-                  step="0.1" 
-                  value={expectedSgpa} 
+                <input
+                  type="range"
+                  min="4.0"
+                  max="10.0"
+                  step="0.1"
+                  value={expectedSgpa}
                   onChange={(e) => setExpectedSgpa(Number(e.target.value))}
                   className="whatif-slider"
                 />
@@ -158,7 +178,7 @@ const DetailedAnalytics: React.FC = () => {
                   {projectedCgpa > 0 ? projectedCgpa.toFixed(2) : "0.00"}
                 </div>
                 <div className="mt-2 text-muted small">
-                  {projectedCgpa >= targetCgpa 
+                  {projectedCgpa >= targetCgpa
                     ? <span><i className="bi bi-check-circle-fill text-success me-1"></i> You will hit your target!</span>
                     : <span>You are {(targetCgpa - projectedCgpa).toFixed(2)} points below target.</span>
                   }

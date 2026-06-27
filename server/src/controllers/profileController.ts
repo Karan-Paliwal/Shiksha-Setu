@@ -72,6 +72,13 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
              
              if (aiResult.cgpa !== null) {
                 user.academicProfile!.currentCgpa = aiResult.cgpa;
+             } else if (semester === 1 && aiResult.sgpa !== null) {
+                user.academicProfile!.currentCgpa = aiResult.sgpa;
+             } else {
+                const validGpas = user.academicProfile!.semesterGpas.filter(g => g > 0);
+                if (validGpas.length > 0) {
+                   user.academicProfile!.currentCgpa = Number((validGpas.reduce((a, b) => a + b, 0) / validGpas.length).toFixed(2));
+                }
              }
              
              if (aiResult.creditsEarned !== null) {
@@ -92,6 +99,10 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
                user.academicProfile!.predictedCgpa = Number(
                  Math.min(10.0, Math.max(4.0, user.academicProfile!.averageCgpa + trend * 0.15 + 0.2)).toFixed(2)
                );
+             }
+             
+             if (aiResult.subjects && aiResult.subjects.length > 0) {
+               user.academicProfile!.subjects = aiResult.subjects;
              }
           }
         } else if (fieldname === 'timetable') {

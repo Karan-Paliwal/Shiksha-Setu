@@ -24,8 +24,7 @@ export const calculateCGPA = (req: Request, res: Response): void => {
   res.json(result);
 };
 
-// ─── Fallback simulated GPAs (used only when AI returns null) ─────────────────
-const FALLBACK_GPAS = [8.20, 8.45, 8.12, 8.68, 9.15, 8.90, 9.20, 9.40];
+// No fallback/estimated GPAs — only real AI-extracted data is stored
 
 export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -62,10 +61,10 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
       // Not fatal — we'll fallback to simulated data below
     }
 
-    // ─── Step 2: Run Groq AI (Llama-4-Scout Vision) analysis on the Cloudinary URL ──
-    let semesterGpas: number[] = [];
-    let currentCgpa: number = 0;
-    let creditsEarned: number = user.academicProfile?.creditsEarned || semCount * 20;
+    // ─── Step 2: Run AI Vision analysis on the Cloudinary URL ──
+    let semesterGpas: number[] = user.academicProfile?.semesterGpas || [];
+    let currentCgpa: number = user.academicProfile?.currentCgpa || 0;
+    let creditsEarned: number = user.academicProfile?.creditsEarned || 0;
     let subjects: { name: string; score: number }[] = user.academicProfile?.subjects || [];
     let aiUsed = false;
 
@@ -124,15 +123,13 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
       }
     }
 
-    // ─── Step 3: Fallback to simulated data if AI did not produce results ──────
+    // ─── Step 3: If AI returned no data, preserve existing user data ────────────
     if (!aiUsed || semesterGpas.every(g => g === 0)) {
-      console.warn("[Marksheet] AI returned no usable data — using simulated fallback GPAs.");
-      semesterGpas = [];
-      for (let i = 0; i < semCount; i++) {
-        semesterGpas.push(FALLBACK_GPAS[i % FALLBACK_GPAS.length]);
-      }
-      const fallbackAvg = semesterGpas.reduce((a, b) => a + b, 0) / semesterGpas.length;
-      currentCgpa = Number(fallbackAvg.toFixed(2));
+      console.warn("[Marksheet] AI returned no usable data — keeping existing user data as-is.");
+      aiUsed = false;
+      // Restore the user's existing semesterGpas (don't overwrite with empty/fake)
+      semesterGpas = user.academicProfile?.semesterGpas || [];
+      currentCgpa = user.academicProfile?.currentCgpa || 0;
     }
 
     // ─── Step 4: Compute aggregate stats ──────────────────────────────────────
@@ -173,32 +170,22 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
     }
 
     const marksheetUrl = cloudinaryUrl || `marksheet-dashboard-sem-${semCount}`;
-    const setMarksheet = (key: string, val: string) => {
-      if (typeof user.documents!.marksheets.set === "function") {
-        user.documents!.marksheets.set(key, val);
-      } else {
-        (user.documents!.marksheets as any)[key] = val;
-      }
-    };
-
-    // Mark the current semester's marksheet with the real URL
-    setMarksheet(semCount.toString(), marksheetUrl);
-    // Also mark all previous semesters so the chart renders all data points
-    for (let i = 1; i < semCount; i++) {
-      const existing = user.documents!.marksheets.get?.(i.toString())
-        || (user.documents!.marksheets as any)[i.toString()];
-      if (!existing) {
-        setMarksheet(i.toString(), `marksheet-inferred-sem-${i}`);
-      }
+    
+    if (typeof user.documents.marksheets.set === "function") {
+      user.documents.marksheets.set(semCount.toString(), marksheetUrl);
+    } else {
+      (user.documents.marksheets as any)[semCount.toString()] = marksheetUrl;
+      user.markModified("documents.marksheets");
     }
 
     user.isProfileComplete = true;
+    user.markModified("academicProfile");
     await user.save();
 
     res.status(200).json({
       message: aiUsed
         ? "Marksheet analyzed successfully using AI Vision."
-        : "Marksheet uploaded. AI analysis unavailable — using estimated academic data.",
+        : "Marksheet uploaded but AI could not extract grades. Your existing data has been preserved.",
       aiUsed,
       isSem1: semCount === 1,
       cloudinaryUrl,
@@ -214,6 +201,6 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
 
   } catch (error: any) {
     console.error("Upload Marksheet Error:", error.message);
-    res.status(500).json({ error: "Server error during marksheet analysis" });
+    res.status(500).json({ error: "Server error during marksheet analysis: " + (error.message || "Unknown error") });
   }
 };

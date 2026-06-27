@@ -10,6 +10,7 @@ const ProfileHome: React.FC = () => {
 
   const [formData, setFormData] = useState({
     semester: "",
+    targetCgpa: "",
     category: "",
     income: "",
     interests: "",
@@ -27,12 +28,22 @@ const ProfileHome: React.FC = () => {
           const fetchedMarksheets: Record<number, { name: string, url: string }> = {};
           if (data.documents?.marksheets) {
             Object.keys(data.documents.marksheets).forEach(sem => {
-              fetchedMarksheets[Number(sem)] = { name: `Semester ${sem} Marksheet`, url: data.documents.marksheets[sem] };
+              const url = data.documents.marksheets[sem];
+              let fileName = `Semester ${sem} Marksheet`;
+              if (url) {
+                const parts = url.split('/');
+                const lastPart = parts[parts.length - 1];
+                if (lastPart) {
+                  fileName = decodeURIComponent(lastPart);
+                }
+              }
+              fetchedMarksheets[Number(sem)] = { name: fileName, url };
             });
           }
 
           setFormData({
             semester: data.academicProfile?.currentSemester?.toString() || "",
+            targetCgpa: data.academicProfile?.targetCgpa?.toString() || "",
             category: data.profileDetails?.category || "",
             income: data.profileDetails?.income || "",
             interests: data.profileDetails?.interests || "",
@@ -124,6 +135,7 @@ const ProfileHome: React.FC = () => {
     try {
       const data = new FormData();
       if (formData.semester) data.append("currentSemester", formData.semester);
+      if (formData.targetCgpa) data.append("targetCgpa", formData.targetCgpa);
       if (formData.category) data.append("category", formData.category);
       if (formData.income) data.append("income", formData.income);
       if (formData.interests) data.append("interests", formData.interests);
@@ -238,15 +250,29 @@ const ProfileHome: React.FC = () => {
 
               <div className="col-md-6">
                 <label className="form-label text-dark fw-semibold ph-text-sm">Current Semester <span className="text-danger">*</span></label>
-                <input
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="8"
-                  className="form-control auth-input border-0 shadow-sm"
-                  placeholder="e.g., 3"
+                <select
+                  className="form-select auth-input border-0 shadow-sm"
                   value={formData.semester}
                   onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                >
+                  <option value="">Select Semester...</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label text-dark fw-semibold ph-text-sm">Target CGPA <span className="text-danger">*</span></label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="4.0"
+                  max="10.0"
+                  className="form-control auth-input border-0 shadow-sm"
+                  placeholder="e.g., 9.0"
+                  value={formData.targetCgpa}
+                  onChange={(e) => setFormData({ ...formData, targetCgpa: e.target.value })}
                 />
               </div>
 

@@ -166,12 +166,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Helper values for calculations (with realistic fallbacks)
-  const defaultSemesterGpas = [8.20, 8.45, 8.12, 8.68, 9.15];
-  const defaultHighestCgpa = 9.12;
-  const defaultAverageCgpa = 8.35;
-  const defaultPredictedCgpa = 8.65;
-
+  // ── Real data only — no hardcoded defaults ──────────────────────────────────
   const profile = academicProfile || user?.academicProfile || {};
   const currentCgpa = profile.currentCgpa || 0;
   const targetCgpa = profile.targetCgpa || 9.0;
@@ -179,28 +174,38 @@ const Dashboard: React.FC = () => {
   const totalCredits = profile.totalCredits || 160;
   const currentSemester = profile.currentSemester || 1;
 
-  const displayPredictedCgpa = profile.predictedCgpa || defaultPredictedCgpa;
+  const displayPredictedCgpa = profile.predictedCgpa || 0;
 
-  // Use real data if available
-  const rawSemesterGpas = (profile.semesterGpas && profile.semesterGpas.length > 0)
+  // Use ONLY real semester GPA data from the user's profile
+  const rawSemesterGpas: number[] = (profile.semesterGpas && profile.semesterGpas.length > 0)
     ? profile.semesterGpas
     : [];
 
-  const displayAverageCgpa = profile.averageCgpa || (rawSemesterGpas.length ? 0 : defaultAverageCgpa);
-  const displayHighestCgpa = profile.highestCgpa || (rawSemesterGpas.length ? 0 : defaultHighestCgpa);
+  // Compute valid GPAs (non-zero entries only)
+  const validSemesterGpas = rawSemesterGpas.filter((g: number) => g > 0);
+  const hasRealData = validSemesterGpas.length > 0;
+
+  // Derive stats from real data only
+  const displayAverageCgpa = hasRealData
+    ? (profile.averageCgpa || Number((validSemesterGpas.reduce((a: number, b: number) => a + b, 0) / validSemesterGpas.length).toFixed(2)))
+    : 0;
+  const displayHighestCgpa = hasRealData
+    ? (profile.highestCgpa || Math.max(...validSemesterGpas))
+    : 0;
+
+  // Find which semester achieved the highest CGPA
+  const highestSemesterIndex = hasRealData
+    ? rawSemesterGpas.indexOf(Math.max(...validSemesterGpas))
+    : -1;
+  const highestSemesterNumber = highestSemesterIndex >= 0 ? highestSemesterIndex + 1 : 0;
 
   let improvementRate = 0;
-  if (rawSemesterGpas.length >= 2) {
-    const validGpas = rawSemesterGpas.filter((g: number) => g > 0);
-    if (validGpas.length >= 2) {
-      const lastGpa = validGpas[validGpas.length - 1];
-      const prevGpa = validGpas[validGpas.length - 2];
-      improvementRate = ((lastGpa - prevGpa) / prevGpa) * 100;
-    }
-  } else if (!rawSemesterGpas.length) {
-    improvementRate = 0.4;
+  if (validSemesterGpas.length >= 2) {
+    const lastGpa = validSemesterGpas[validSemesterGpas.length - 1];
+    const prevGpa = validSemesterGpas[validSemesterGpas.length - 2];
+    improvementRate = ((lastGpa - prevGpa) / prevGpa) * 100;
   }
-  
+
   const displayImprovementRate = `${improvementRate >= 0 ? '+' : ''}${improvementRate.toFixed(1)}%`;
   const improvementRateClass = improvementRate >= 0 ? "text-success" : "text-danger";
   const improvementRateIconClass = improvementRate >= 0 ? "bg-success text-success" : "bg-danger text-danger";
@@ -211,17 +216,13 @@ const Dashboard: React.FC = () => {
   // Chart coordinates mapping (SVG dimensions: 1000 x 270)
   const getY = (gpa: number) => Math.max(0, Math.min(270, (10.0 - gpa) * 90));
 
-  // Filter points to only show semesters that have uploaded marksheets
-  const uploadedMarksheets = user?.documents?.marksheets || {};
-  const graphData = rawSemesterGpas.map((gpa: number, index: number) => {
-    const semNumber = index + 1;
-    // Check if marksheet is uploaded for this semester
-    const isUploaded = !!uploadedMarksheets[semNumber.toString()];
-    return { semNumber, gpa, isUploaded };
-  }).filter((data: any) => data.isUploaded && data.gpa > 0);
+  // Build graph data from real semester GPAs only — show all semesters with valid GPAs
+  const graphData = rawSemesterGpas
+    .map((gpa: number, index: number) => ({ semNumber: index + 1, gpa }))
+    .filter((data: any) => data.gpa > 0);
 
-  // If no marksheets uploaded, fallback to default (or empty)
-  const finalGraphData = graphData.length > 0 ? graphData : defaultSemesterGpas.map((gpa, i) => ({ semNumber: i + 1, gpa, isUploaded: true }));
+  // No fallback to fake data — graphData is empty if no real data exists
+  const finalGraphData = graphData;
 
   const points = finalGraphData.map((data: any, i: number) => {
     const x = finalGraphData.length > 1
@@ -284,7 +285,7 @@ const Dashboard: React.FC = () => {
             ? isSem1Upload
               ? <>Your Semester 1 marksheet was <span className="badge bg-success ms-1 me-1">AI Successfully Analyzed</span> — your <strong>SGPA: {currentCgpa > 0 ? currentCgpa.toFixed(2) : "—"}</strong> has been extracted and displayed on your dashboard.</>
               : <>Your marksheet was <span className="badge bg-success ms-1 me-1">AI Successfully Analyzed</span> — semester GPA data extracted from your actual document.</>
-            : <>Your marksheet was uploaded. Academic metrics updated <span className="badge bg-secondary ms-1">Estimated Data</span> — AI could not extract grades from this file.</>
+            : <>Your marksheet was uploaded but <span className="badge bg-warning text-dark ms-1 me-1">AI could not extract grades</span> from this document. Your existing data has been preserved. Please try uploading a clearer image of your actual marksheet.</>
           }
           <button type="button" className="btn-close" onClick={() => setUploadSuccess(false)}></button>
         </div>
@@ -397,85 +398,98 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-medium">
-                {currentSemester === 1 ? `SGPA: ${currentCgpa > 0 ? currentCgpa.toFixed(2) : "—"}` : `Overall Average: ${displayAverageCgpa.toFixed(2)}`}
+                {currentSemester === 1 ? `SGPA: ${currentCgpa > 0 ? currentCgpa.toFixed(2) : "—"}` : (hasRealData ? `Overall Average: ${displayAverageCgpa.toFixed(2)}` : "No data yet")}
               </div>
             </div>
 
             <div className="w-100 position-relative mt-4 db-chart-area-container">
 
-              {/* Y-Axis Labels */}
-              <div className="position-absolute h-100 d-flex flex-column justify-content-between text-muted db-chart-y-axis">
-                <span>10.0</span>
-                <span>9.0</span>
-                <span>8.0</span>
-                <span>7.0</span>
-              </div>
+              {points.length > 0 ? (
+                <>
+                  {/* Y-Axis Labels */}
+                  <div className="position-absolute h-100 d-flex flex-column justify-content-between text-muted db-chart-y-axis">
+                    <span>10.0</span>
+                    <span>9.0</span>
+                    <span>8.0</span>
+                    <span>7.0</span>
+                  </div>
 
-              {/* Chart Area */}
-              <div className="position-absolute h-100 border-start border-bottom db-chart-main-area">
+                  {/* Chart Area */}
+                  <div className="position-absolute h-100 border-start border-bottom db-chart-main-area">
 
-                {/* Grid Lines */}
-                <div className="w-100 border-top position-absolute db-chart-grid-1"></div>
-                <div className="w-100 border-top position-absolute db-chart-grid-2"></div>
+                    {/* Grid Lines */}
+                    <div className="w-100 border-top position-absolute db-chart-grid-1"></div>
+                    <div className="w-100 border-top position-absolute db-chart-grid-2"></div>
 
-                {/* SVG Line Chart (Circle Dot Points connected with straight lines) */}
-                <svg viewBox="0 0 1000 270" width="100%" height="100%" preserveAspectRatio="none" className="position-absolute top-0 start-0 overflow-visible">
-                  <defs>
-                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(14, 165, 233, 0.4)" />
-                      <stop offset="100%" stopColor="rgba(14, 165, 233, 0.0)" />
-                    </linearGradient>
-                  </defs>
+                    {/* SVG Line Chart (Circle Dot Points connected with straight lines) */}
+                    <svg viewBox="0 0 1000 270" width="100%" height="100%" preserveAspectRatio="none" className="position-absolute top-0 start-0 overflow-visible">
+                      <defs>
+                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="rgba(14, 165, 233, 0.4)" />
+                          <stop offset="100%" stopColor="rgba(14, 165, 233, 0.0)" />
+                        </linearGradient>
+                      </defs>
 
-                  {/* Fill area under the straight lines */}
-                  {points.length > 0 && (
-                    <path
-                      d={`M ${points[0].x},270 ` + points.map((p: any) => `L ${p.x},${p.y}`).join(" ") + ` L ${points[points.length - 1].x},270 Z`}
-                      fill="url(#chartGradient)"
-                    />
-                  )}
+                      {/* Fill area under the straight lines */}
+                      {points.length > 0 && (
+                        <path
+                          d={`M ${points[0].x},270 ` + points.map((p: any) => `L ${p.x},${p.y}`).join(" ") + ` L ${points[points.length - 1].x},270 Z`}
+                          fill="url(#chartGradient)"
+                        />
+                      )}
 
-                  {/* Straight lines connecting points */}
-                  {points.length > 0 && (
-                    <polyline
-                      fill="none"
-                      stroke="var(--ss-primary)"
-                      strokeWidth="4"
-                      points={points.map((p: any) => `${p.x},${p.y}`).join(" ")}
-                    />
-                  )}
+                      {/* Straight lines connecting points */}
+                      {points.length > 0 && (
+                        <polyline
+                          fill="none"
+                          stroke="var(--ss-primary)"
+                          strokeWidth="4"
+                          points={points.map((p: any) => `${p.x},${p.y}`).join(" ")}
+                        />
+                      )}
 
-                  {/* Circle dot points representing CGPA with values above */}
-                  {points.map((p: any, idx: number) => (
-                    <g key={idx}>
-                      {/* Outer shadow circle */}
-                      <circle cx={p.x} cy={p.y} r="8" fill="rgba(37, 99, 235, 0.2)" />
-                      {/* Inner circle dot */}
-                      <circle cx={p.x} cy={p.y} r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
-                      {/* CGPA Text value label */}
-                      <text
-                        x={p.x}
-                        y={p.y - 12}
-                        textAnchor="middle"
-                        fontSize="11"
-                        fontWeight="700"
-                        fill="#0f172a"
-                      >
-                        {p.gpa.toFixed(2)}
-                      </text>
-                    </g>
-                  ))}
-                </svg>
+                      {/* Circle dot points representing CGPA with values above */}
+                      {points.map((p: any, idx: number) => (
+                        <g key={idx}>
+                          {/* Outer shadow circle */}
+                          <circle cx={p.x} cy={p.y} r="8" fill="rgba(37, 99, 235, 0.2)" />
+                          {/* Inner circle dot */}
+                          <circle cx={p.x} cy={p.y} r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
+                          {/* CGPA Text value label */}
+                          <text
+                            x={p.x}
+                            y={p.y - 12}
+                            textAnchor="middle"
+                            fontSize="11"
+                            fontWeight="700"
+                            fill="#0f172a"
+                          >
+                            {p.gpa.toFixed(2)}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
 
-                {/* X-Axis Labels */}
-                <div className="position-absolute w-100 d-flex justify-content-between text-muted mt-2 db-chart-x-axis">
-                  {finalGraphData.map((data: any, i: number) => (
-                    <span key={i} className={i === finalGraphData.length - 1 ? "text-primary fw-bold" : ""}>
-                      Sem {data.semNumber}
-                    </span>
-                  ))}
+                    {/* X-Axis Labels */}
+                    <div className="position-absolute w-100 d-flex justify-content-between text-muted mt-2 db-chart-x-axis">
+                      {finalGraphData.map((data: any, i: number) => (
+                        <span key={i} className={i === finalGraphData.length - 1 ? "text-primary fw-bold" : ""}>
+                          Sem {data.semNumber}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Empty state — no real semester data yet */
+                <div className="d-flex flex-column align-items-center justify-content-center text-center py-5" style={{ minHeight: "220px" }}>
+                  <i className="bi bi-graph-up text-primary opacity-25" style={{ fontSize: "3rem" }}></i>
+                  <h6 className="fw-bold text-dark mt-3 mb-1">No Semester Data Yet</h6>
+                  <p className="text-muted mb-0" style={{ maxWidth: "360px" }}>
+                    Upload your marksheets from the <strong>Profile</strong> page or use the <strong>Upload Marksheet</strong> button above. AI will extract your real semester GPAs and plot them here.
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -492,11 +506,11 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-ss-muted fw-semibold text-uppercase db-text-xxs-spacing">Highest CGPA</div>
-                  <div className="fw-bold fs-4 text-dark">{displayHighestCgpa.toFixed(2)}</div>
+                  <div className="fw-bold fs-4 text-dark">{hasRealData ? displayHighestCgpa.toFixed(2) : "—"}</div>
                 </div>
               </div>
               <div className="text-muted ms-5 ps-1 db-text-xs-alt">
-                Achieved in Semester {rawSemesterGpas.indexOf(displayHighestCgpa) !== -1 ? rawSemesterGpas.indexOf(displayHighestCgpa) + 1 : rawSemesterGpas.length}
+                {hasRealData ? `Achieved in Semester ${highestSemesterNumber}` : "Upload marksheets to see"}
               </div>
             </div>
 
@@ -508,10 +522,10 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-ss-muted fw-semibold text-uppercase db-text-xxs-spacing">Average CGPA</div>
-                  <div className="fw-bold fs-4 text-dark">{displayAverageCgpa.toFixed(2)}</div>
+                  <div className="fw-bold fs-4 text-dark">{hasRealData ? displayAverageCgpa.toFixed(2) : "—"}</div>
                 </div>
               </div>
-              <div className="text-muted ms-5 ps-1 db-text-xs-alt">Across {rawSemesterGpas.length} semesters</div>
+              <div className="text-muted ms-5 ps-1 db-text-xs-alt">{hasRealData ? `Across ${validSemesterGpas.length} semester${validSemesterGpas.length !== 1 ? 's' : ''}` : "No data yet"}</div>
             </div>
 
             {/* Improvement Rate */}
@@ -535,56 +549,67 @@ const Dashboard: React.FC = () => {
       {/* Row 3: Weekly Schedule */}
       <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
         <h4 className="fw-bold text-ss-bright mb-0">My Weekly Schedule</h4>
-        <button
-          id="btn-add-schedule-trigger"
-          className="btn btn-ss-outline bg-white shadow-sm d-flex align-items-center justify-content-center p-2 rounded-circle hover-primary"
-          style={{ width: "40px", height: "40px" }}
-          onClick={() => setShowAddScheduleModal(true)}
-          title="Add Class to Schedule"
-        >
-          <i className="bi bi-plus-lg fs-5 text-primary"></i>
-        </button>
       </div>
       <div className="card border shadow-sm rounded-4 p-4 mb-5">
         {schedule.length > 0 ? (
-          <div className="table-responsive">
-            <table className="table align-middle">
-              <thead>
-                <tr>
-                  <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Course Name</th>
-                  <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Day</th>
-                  <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Time</th>
-                  <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Location</th>
-                </tr>
-              </thead>
-              <tbody>
-                {schedule.map((cls, idx) => (
-                  <tr key={idx} className="border-bottom">
-                    <td className="fw-bold text-dark py-3">
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center db-icon-sm">
-                          <i className="bi bi-book"></i>
-                        </div>
-                        {cls.courseName}
-                      </div>
-                    </td>
-                    <td className="text-secondary fw-medium py-3">{cls.dayOfWeek}</td>
-                    <td className="text-secondary py-3">
-                      <span className="badge bg-light text-dark border rounded-pill px-3 py-2 fw-medium">
-                        {cls.startTime} - {cls.endTime}
-                      </span>
-                    </td>
-                    <td className="text-secondary py-3">{cls.location || "TBA"}</td>
+          <>
+            <div className="table-responsive">
+              <table className="table align-middle">
+                <thead>
+                  <tr>
+                    <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Course Name</th>
+                    <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Day</th>
+                    <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Time</th>
+                    <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Location</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {schedule.map((cls, idx) => (
+                    <tr key={idx} className="border-bottom">
+                      <td className="fw-bold text-dark py-3">
+                        <div className="d-flex align-items-center gap-3">
+                          <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center db-icon-sm">
+                            <i className="bi bi-book"></i>
+                          </div>
+                          {cls.courseName}
+                        </div>
+                      </td>
+                      <td className="text-secondary fw-medium py-3">{cls.dayOfWeek}</td>
+                      <td className="text-secondary py-3">
+                        <span className="badge bg-light text-dark border rounded-pill px-3 py-2 fw-medium">
+                          {cls.startTime} - {cls.endTime}
+                        </span>
+                      </td>
+                      <td className="text-secondary py-3">{cls.location || "TBA"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="d-flex justify-content-center mt-4">
+              <button
+                id="btn-add-schedule-trigger"
+                className="db-add-schedule-btn"
+                onClick={() => setShowAddScheduleModal(true)}
+                title="Add Class to Schedule"
+              >
+                <i className="bi bi-plus-lg fs-4"></i>
+              </button>
+            </div>
+          </>
         ) : (
           <div className="text-center py-5">
             <div className="text-muted mb-3"><i className="bi bi-calendar-x fs-1"></i></div>
             <h6 className="fw-bold text-dark">No classes scheduled</h6>
-            <p className="text-secondary db-text-base">Update your profile to add classes to your timetable.</p>
+            <p className="text-secondary db-text-base mb-4">Update your profile to add classes to your timetable.</p>
+            <button
+              id="btn-add-schedule-trigger"
+              className="db-add-schedule-btn mx-auto"
+              onClick={() => setShowAddScheduleModal(true)}
+              title="Add Class to Schedule"
+            >
+              <i className="bi bi-plus-lg fs-4"></i>
+            </button>
           </div>
         )}
       </div>
