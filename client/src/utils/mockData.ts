@@ -7,27 +7,16 @@ import {
   Scholarship,
   GovernmentScheme,
   InterviewQuestion,
-  AttendanceRecord,
   StudyPlan,
   AIChatMessage,
 } from "../types";
 
 // ─── Dashboard Stats ─────────────────────────────────────
 export const mockDashboardStats: DashboardStats = {
-  attendance: "82%",
   cgpa: "8.4",
   scholarships: 12,
   applications: 3,
 };
-
-// ─── Attendance Records ──────────────────────────────────
-export const mockAttendance: AttendanceRecord[] = [
-  { subject: "Data Structures", attendedClasses: 38, totalClasses: 42, percentage: 90.5 },
-  { subject: "Operating Systems", attendedClasses: 30, totalClasses: 40, percentage: 75.0 },
-  { subject: "Database Management", attendedClasses: 35, totalClasses: 38, percentage: 92.1 },
-  { subject: "Computer Networks", attendedClasses: 28, totalClasses: 40, percentage: 70.0 },
-  { subject: "Software Engineering", attendedClasses: 32, totalClasses: 36, percentage: 88.9 },
-];
 
 // ─── Study Plans ─────────────────────────────────────────
 export const mockStudyPlans: StudyPlan[] = [

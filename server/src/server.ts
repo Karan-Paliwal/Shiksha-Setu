@@ -15,6 +15,7 @@ import opportunitiesRoutes from "./routes/opportunities";
 import careerRoutes from "./routes/career";
 import profileRoutes from "./routes/profile";
 import scheduleRoutes from "./routes/schedule";
+import courseRoutes from "./routes/courseRoutes";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/opportunities", opportunitiesRoutes);
 app.use("/api/career", careerRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/schedule", scheduleRoutes);
+app.use("/api/courses", courseRoutes);
 
 // ─── Health Check ────────────────────────────────────────
 app.get("/api/health", (_req, res) => {

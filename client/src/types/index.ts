@@ -51,19 +51,12 @@ export interface DashboardCardData {
 }
 
 export interface DashboardStats {
-  attendance: string;
   cgpa: string;
   scholarships: number;
   applications: number;
 }
 
 // ─── Academic Types ──────────────────────────────────────
-export interface AttendanceRecord {
-  subject: string;
-  attendedClasses: number;
-  totalClasses: number;
-  percentage: number;
-}
 
 export interface StudyPlan {
   _id?: string;
