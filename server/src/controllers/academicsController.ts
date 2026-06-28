@@ -162,9 +162,15 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
 
     const marksheetUrl = cloudinaryUrl || `marksheet-dashboard-sem-${semCount}`;
     
+ skill-development-page
     if (user.documents && typeof user.documents.marksheets?.set === "function") {
       user.documents.marksheets.set(semCount.toString(), marksheetUrl);
     } else if (user.documents && user.documents.marksheets) {
+
+    if (typeof user.documents.marksheets.set === "function") {
+      user.documents.marksheets.set(semCount.toString(), marksheetUrl);
+    } else {
+ main
       (user.documents.marksheets as any)[semCount.toString()] = marksheetUrl;
       user.markModified("documents.marksheets");
     }
