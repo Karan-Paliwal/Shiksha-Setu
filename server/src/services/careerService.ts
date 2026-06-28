@@ -1,5 +1,4 @@
-// ─── Career Service ──────────────────────────────────────
-// TODO: Implement resume builder, roadmap, and tracking logic
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const getCareerStatus = () => {
   return {
@@ -15,82 +14,43 @@ export const getCareerStatus = () => {
   };
 };
 
-// TODO: Generate from database
-export const getInterviewQuestions = () => {
-  return [
-    {
-      id: 1,
-      category: "Technical",
-      question: "What is the difference between var, let, and const in JavaScript?",
-      difficulty: "Easy",
-    },
-    {
-      id: 2,
-      category: "Technical",
-      question: "Explain the concept of closures in JavaScript.",
-      difficulty: "Medium",
-    },
-    {
-      id: 3,
-      category: "Behavioral",
-      question: "Tell me about a time you worked on a team project.",
-      difficulty: "Easy",
-    },
-    {
-      id: 4,
-      category: "Technical",
-      question: "What is the difference between SQL and NoSQL databases?",
-      difficulty: "Medium",
-    },
-    {
-      id: 5,
-      category: "HR",
-      question: "Where do you see yourself in 5 years?",
-      difficulty: "Easy",
-    },
-    {
-      id: 6,
-      category: "Technical",
-      question: "Explain RESTful API design principles.",
-      difficulty: "Medium",
-    },
-  ];
+const getGenAI = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+  return new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: "gemini-2.5-flash" });
 };
 
-export const getSkillRoadmap = (track: string = "fullstack") => {
-  const roadmaps: Record<string, string[]> = {
-    fullstack: [
-      "HTML & CSS Fundamentals",
-      "JavaScript ES6+",
-      "React.js",
-      "Node.js & Express",
-      "MongoDB & Mongoose",
-      "REST API Design",
-      "Authentication & Security",
-      "Deployment & DevOps",
-    ],
-    frontend: [
-      "HTML5 & CSS3",
-      "JavaScript & TypeScript",
-      "React.js / Next.js",
-      "State Management",
-      "CSS Frameworks (Bootstrap/Tailwind)",
-      "Testing (Jest, RTL)",
-      "Performance Optimization",
-    ],
-    backend: [
-      "Node.js Fundamentals",
-      "Express.js",
-      "Database Design (SQL & NoSQL)",
-      "Authentication & Authorization",
-      "API Design & Documentation",
-      "Caching & Message Queues",
-      "Containerization (Docker)",
-    ],
-  };
+export const getInterviewQuestions = async (role: string = "Software Engineer") => {
+  try {
+    const model = getGenAI();
+    const prompt = `Generate exactly 5 interview questions for a ${role} role. Return a JSON array of objects with exactly this format: [{"id": 1, "category": "Technical", "question": "...", "difficulty": "Medium"}]. Only return the raw JSON array.`;
+    const result = await model.generateContent(prompt);
+    let text = result.response.text();
+    text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+    return JSON.parse(text);
+  } catch (err) {
+    console.error("AI Interview Generation Error:", err);
+    // Fallback data
+    return [
+      { id: 1, category: "Technical", question: "What are your strongest technical skills?", difficulty: "Medium" }
+    ];
+  }
+};
 
-  return {
-    track,
-    steps: roadmaps[track] || roadmaps.fullstack,
-  };
+export const getSkillRoadmap = async (track: string = "fullstack") => {
+  try {
+    const model = getGenAI();
+    const prompt = `Generate a learning roadmap for a ${track} developer. Return a JSON object with this exact format: {"track": "${track}", "steps": ["Step 1", "Step 2", "Step 3"]}. Provide exactly 6 to 8 steps. Only return the raw JSON object.`;
+    const result = await model.generateContent(prompt);
+    let text = result.response.text();
+    text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+    return JSON.parse(text);
+  } catch (err) {
+    console.error("AI Roadmap Generation Error:", err);
+    // Fallback data
+    return {
+      track,
+      steps: ["HTML/CSS", "JavaScript", "React", "Node.js", "Database Design"],
+    };
+  }
 };

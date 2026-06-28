@@ -48,7 +48,7 @@ const Landing: React.FC = () => {
       iconClass: "bi-journal-text",
       bgClass: "lp-icon-cyan",
       title: "Academic Hub",
-      desc: "Manage your smart timetable, track attendance, and calculate your CGPA with beautiful visual analytics.",
+      desc: "Manage your smart timetable and calculate your CGPA with beautiful visual analytics.",
       link: "#"
     },
     {

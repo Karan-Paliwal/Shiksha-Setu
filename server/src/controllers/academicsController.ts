@@ -9,15 +9,6 @@ export const getStatus = (_req: Request, res: Response): void => {
   res.json(academicsService.getAcademicsStatus());
 };
 
-export const predictAttendance = (req: Request, res: Response): void => {
-  const { attended, total } = req.body;
-  const result = academicsService.predictAttendance(
-    Number(attended) || 0,
-    Number(total) || 0
-  );
-  res.json(result);
-};
-
 export const calculateCGPA = (req: Request, res: Response): void => {
   const { grades } = req.body;
   const result = academicsService.calculateCGPA(grades || []);
@@ -171,9 +162,15 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
 
     const marksheetUrl = cloudinaryUrl || `marksheet-dashboard-sem-${semCount}`;
     
+ skill-development-page
+    if (user.documents && typeof user.documents.marksheets?.set === "function") {
+      user.documents.marksheets.set(semCount.toString(), marksheetUrl);
+    } else if (user.documents && user.documents.marksheets) {
+
     if (typeof user.documents.marksheets.set === "function") {
       user.documents.marksheets.set(semCount.toString(), marksheetUrl);
     } else {
+ main
       (user.documents.marksheets as any)[semCount.toString()] = marksheetUrl;
       user.markModified("documents.marksheets");
     }
