@@ -6,10 +6,6 @@ export const getProfile = async () => {
 };
 
 export const saveProfile = async (formData: FormData) => {
-  const response = await api.put('/profile/setup', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await api.put('/profile/setup', formData);
   return response.data;
 };
