@@ -4,9 +4,6 @@ import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
-// Get playlist details and videos
-router.get('/:playlistId', getCourseDetails);
-
 // Progress routes (protected)
 router.get('/progress/:playlistId', authMiddleware, getCourseProgress);
 router.post('/progress/:playlistId', authMiddleware, markVideoCompleted);
@@ -14,5 +11,8 @@ router.post('/progress/:playlistId', authMiddleware, markVideoCompleted);
 // Save routes (protected)
 router.post('/save', authMiddleware, toggleSaveCourse);
 router.get('/saved', authMiddleware, getSavedCourses);
+
+// Get playlist details and videos. Keep this after specific routes so it does not catch /saved or /progress/:playlistId.
+router.get('/:playlistId', getCourseDetails);
 
 export default router;

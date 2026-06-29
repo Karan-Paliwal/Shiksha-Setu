@@ -161,22 +161,17 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
     }
 
     const marksheetUrl = cloudinaryUrl || `marksheet-dashboard-sem-${semCount}`;
-    
- skill-development-page
-    if (user.documents && typeof user.documents.marksheets?.set === "function") {
-      user.documents.marksheets.set(semCount.toString(), marksheetUrl);
-    } else if (user.documents && user.documents.marksheets) {
+    const marksheetKey = semCount.toString();
 
     if (typeof user.documents.marksheets.set === "function") {
-      user.documents.marksheets.set(semCount.toString(), marksheetUrl);
+      user.documents.marksheets.set(marksheetKey, marksheetUrl);
     } else {
- main
-      (user.documents.marksheets as any)[semCount.toString()] = marksheetUrl;
-      user.markModified("documents.marksheets");
+      (user.documents.marksheets as any)[marksheetKey] = marksheetUrl;
     }
 
     user.isProfileComplete = true;
     user.markModified("academicProfile");
+    user.markModified("documents.marksheets");
     await user.save();
 
     res.status(200).json({
