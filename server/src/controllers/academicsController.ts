@@ -154,19 +154,23 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
     };
 
     // Save Cloudinary URL (or a placeholder) in documents.marksheets
+    const documents = user.documents || ({ marksheets: new Map() } as any);
     if (!user.documents) {
-      user.documents = { marksheets: new Map() } as any;
-    } else if (!user.documents.marksheets) {
-      user.documents.marksheets = new Map();
+      user.documents = documents;
+    }
+
+    if (!documents.marksheets) {
+      documents.marksheets = new Map() as any;
     }
 
     const marksheetUrl = cloudinaryUrl || `marksheet-dashboard-sem-${semCount}`;
     const marksheetKey = semCount.toString();
+    const marksheets = documents.marksheets as unknown as Map<string, string>;
 
-    if (typeof user.documents.marksheets.set === "function") {
-      user.documents.marksheets.set(marksheetKey, marksheetUrl);
+    if (typeof marksheets.set === "function") {
+      marksheets.set(marksheetKey, marksheetUrl);
     } else {
-      (user.documents.marksheets as any)[marksheetKey] = marksheetUrl;
+      (marksheets as any)[marksheetKey] = marksheetUrl;
     }
 
     user.isProfileComplete = true;
