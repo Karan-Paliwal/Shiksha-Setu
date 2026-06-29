@@ -1,7 +1,72 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
 import "./SkillDevHome.css";
 
 const SkillDevHome: React.FC = () => {
+  const navigate = useNavigate();
+
+  const [reactCourseProgress, setReactCourseProgress] = useState(0);
+  const [pythonCourseProgress, setPythonCourseProgress] = useState(0);
+  const [savedCourses, setSavedCourses] = useState<any[]>([]);
+  const [showSavedModal, setShowSavedModal] = useState(false);
+
+  useEffect(() => {
+    fetchCourseData();
+    fetchSavedCourses();
+  }, []);
+
+  const fetchCourseData = async () => {
+    try {
+      const reactId = 'PLC3y8-rFHvwgg3vaYJgHGnModB54rxOk3';
+      const pythonId = 'PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU';
+
+      // Fetch React details & progress
+      const reactRes = await api.get(`/courses/${reactId}`);
+      const reactProgRes = await api.get(`/courses/progress/${reactId}`);
+      const reactTotal = reactRes.data.videos?.length || 1;
+      const reactCompleted = reactProgRes.data.completedVideoIds?.length || 0;
+      setReactCourseProgress(Math.round((reactCompleted / reactTotal) * 100));
+
+      // Fetch Python details & progress
+      const pythonRes = await api.get(`/courses/${pythonId}`);
+      const pythonProgRes = await api.get(`/courses/progress/${pythonId}`);
+      const pythonTotal = pythonRes.data.videos?.length || 1;
+      const pythonCompleted = pythonProgRes.data.completedVideoIds?.length || 0;
+      setPythonCourseProgress(Math.round((pythonCompleted / pythonTotal) * 100));
+    } catch (error) {
+      console.error("Failed to fetch course data:", error);
+    }
+  };
+
+  const fetchSavedCourses = async () => {
+    try {
+      const res = await api.get('/courses/saved');
+      setSavedCourses(res.data);
+    } catch (error) {
+      console.error("Failed to fetch saved courses:", error);
+    }
+  };
+
+  const toggleSaveCourse = async (courseData: any) => {
+    try {
+      await api.post('/courses/save', courseData);
+      fetchSavedCourses();
+    } catch (error) {
+      console.error("Failed to toggle save:", error);
+    }
+  };
+
+  const isSaved = (playlistId: string) => savedCourses.some(c => c.playlistId === playlistId);
+
+  const handleAction = (action: string) => {
+    if (action === 'Saved Paths') {
+      setShowSavedModal(true);
+      return;
+    }
+    alert(`${action} feature coming soon!`);
+  };
+
   return (
     <div className="fade-in pb-5">
       <div className="row g-4">
@@ -17,10 +82,10 @@ const SkillDevHome: React.FC = () => {
               </p>
             </div>
             <div className="d-flex gap-2">
-              <button className="btn btn-light border d-flex align-items-center gap-2 fw-medium shadow-sm">
+              <button onClick={() => handleAction('Saved Paths')} className="btn btn-light border d-flex align-items-center gap-2 fw-medium shadow-sm">
                 <i className="bi bi-bookmark"></i> Saved Paths
               </button>
-              <button className="btn btn-primary d-flex align-items-center gap-2 fw-medium shadow-sm">
+              <button onClick={() => handleAction('Explore Catalog')} className="btn btn-primary d-flex align-items-center gap-2 fw-medium shadow-sm">
                 <i className="bi bi-compass"></i> Explore Catalog
               </button>
             </div>
@@ -29,7 +94,7 @@ const SkillDevHome: React.FC = () => {
           {/* Ongoing Learning */}
           <div className="d-flex justify-content-between align-items-center mb-3 mt-5">
             <h5 className="fw-bold mb-0">Ongoing Learning</h5>
-            <a href="#" className="text-primary text-decoration-none fw-medium sd-view-all">View All</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); handleAction('View All Courses'); }} className="text-primary text-decoration-none fw-medium sd-view-all">View All</a>
           </div>
 
           <div className="row g-4 mb-5">
@@ -40,20 +105,28 @@ const SkillDevHome: React.FC = () => {
                   <div className="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center sd-course-icon-wrapper">
                     <i className="bi bi-cloud-check fs-4"></i>
                   </div>
-                  <span className="badge bg-light text-dark border rounded-pill">Cloud</span>
+                  <div className="d-flex gap-2">
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSaveCourse({ playlistId: 'PLC3y8-rFHvwgg3vaYJgHGnModB54rxOk3', title: 'ReactJS Tutorial for Beginners', description: 'Codevolution • Module 3: Components', thumbnailUrl: 'https://img.youtube.com/vi/QFaFIcGhPoM/hqdefault.jpg', channelTitle: 'Codevolution' }); }} 
+                      className={`btn btn-sm ${isSaved('PLC3y8-rFHvwgg3vaYJgHGnModB54rxOk3') ? 'btn-primary' : 'btn-outline-primary'} border rounded-pill d-flex align-items-center`}
+                    >
+                      <i className={`bi ${isSaved('PLC3y8-rFHvwgg3vaYJgHGnModB54rxOk3') ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
+                    </button>
+                    <span className="badge bg-light text-dark border rounded-pill py-2">Frontend</span>
+                  </div>
                 </div>
-                <h5 className="fw-bold text-dark mb-1">AWS Cloud Practitioner</h5>
-                <p className="text-secondary mb-4 sd-course-module">Module 4: Security and Compliance</p>
+                <h5 className="fw-bold text-dark mb-1">ReactJS Tutorial for Beginners</h5>
+                <p className="text-secondary mb-4 sd-course-module">Codevolution • Module 3: Components</p>
                 
                 <div className="mt-auto">
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <span className="fw-medium text-dark sd-progress-label">Progress</span>
-                    <span className="fw-bold text-primary sd-progress-value">65%</span>
+                    <span className="fw-bold text-primary sd-progress-value">{reactCourseProgress}%</span>
                   </div>
                   <div className="progress rounded-pill bg-light mb-3 sd-progress-container">
-                    <div className="progress-bar bg-primary sd-w-65"></div>
+                    <div className="progress-bar bg-primary" style={{ width: `${reactCourseProgress}%` }}></div>
                   </div>
-                  <button className="btn btn-primary w-100 fw-medium shadow-sm">Continue Learning</button>
+                  <button onClick={() => navigate('/dashboard/skill-dev/course/PLC3y8-rFHvwgg3vaYJgHGnModB54rxOk3')} className="btn btn-primary w-100 fw-medium shadow-sm">Continue Learning</button>
                 </div>
               </div>
             </div>
@@ -65,20 +138,28 @@ const SkillDevHome: React.FC = () => {
                   <div className="bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center sd-course-icon-wrapper">
                     <i className="bi bi-braces fs-4"></i>
                   </div>
-                  <span className="badge bg-light text-dark border rounded-pill">Frontend</span>
+                  <div className="d-flex gap-2">
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSaveCourse({ playlistId: 'PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU', title: 'Python OOP Tutorials', description: 'Corey Schafer • Module 1: Classes', thumbnailUrl: 'https://img.youtube.com/vi/ZDa-Z5JzLYM/hqdefault.jpg', channelTitle: 'Corey Schafer' }); }} 
+                      className={`btn btn-sm ${isSaved('PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU') ? 'btn-success' : 'btn-outline-success'} border rounded-pill d-flex align-items-center`}
+                    >
+                      <i className={`bi ${isSaved('PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU') ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
+                    </button>
+                    <span className="badge bg-light text-dark border rounded-pill py-2">Backend</span>
+                  </div>
                 </div>
-                <h5 className="fw-bold text-dark mb-1">Advanced React Patterns</h5>
-                <p className="text-secondary mb-4 sd-course-module">Module 2: Custom Hooks & Context</p>
+                <h5 className="fw-bold text-dark mb-1">Python OOP Tutorials</h5>
+                <p className="text-secondary mb-4 sd-course-module">Corey Schafer • Module 1: Classes</p>
                 
                 <div className="mt-auto">
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <span className="fw-medium text-dark sd-progress-label">Progress</span>
-                    <span className="fw-bold text-success sd-progress-value">32%</span>
+                    <span className="fw-bold text-success sd-progress-value">{pythonCourseProgress}%</span>
                   </div>
                   <div className="progress rounded-pill bg-light mb-3 sd-progress-container">
-                    <div className="progress-bar bg-success sd-w-32"></div>
+                    <div className="progress-bar bg-success" style={{ width: `${pythonCourseProgress}%` }}></div>
                   </div>
-                  <button className="btn btn-light border w-100 fw-medium shadow-sm text-secondary">Continue Learning</button>
+                  <button onClick={() => navigate('/dashboard/skill-dev/course/PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU')} className="btn btn-light border w-100 fw-medium shadow-sm text-secondary">Continue Learning</button>
                 </div>
               </div>
             </div>
@@ -108,7 +189,7 @@ const SkillDevHome: React.FC = () => {
                       <span><i className="bi bi-star-fill text-warning me-1"></i> 4.8</span>
                     </div>
                   </div>
-                  <button className="btn btn-outline-primary fw-medium rounded-pill px-4 shadow-sm">Enroll</button>
+                  <button onClick={() => handleAction('Enroll in Backend Engineering Track')} className="btn btn-outline-primary fw-medium rounded-pill px-4 shadow-sm">Enroll</button>
                 </div>
               </div>
 
@@ -128,7 +209,7 @@ const SkillDevHome: React.FC = () => {
                       <span><i className="bi bi-star-fill text-warning me-1"></i> 4.9</span>
                     </div>
                   </div>
-                  <button className="btn btn-outline-primary fw-medium rounded-pill px-4 shadow-sm">Enroll</button>
+                  <button onClick={() => handleAction('Enroll in Generative AI Fundamentals')} className="btn btn-outline-primary fw-medium rounded-pill px-4 shadow-sm">Enroll</button>
                 </div>
               </div>
 
@@ -141,7 +222,7 @@ const SkillDevHome: React.FC = () => {
               <h5 className="fw-bold mb-1">Skill Assessments</h5>
               <p className="text-secondary mb-0 sd-assessment-subtitle">Take quizzes to validate your skills and earn profile badges.</p>
             </div>
-            <button className="btn btn-light border rounded-pill px-3 shadow-sm"><i className="bi bi-filter"></i> Filter</button>
+            <button onClick={() => handleAction('Filter Assessments')} className="btn btn-light border rounded-pill px-3 shadow-sm"><i className="bi bi-filter"></i> Filter</button>
           </div>
 
           <div className="row g-4 mb-4">
@@ -150,7 +231,7 @@ const SkillDevHome: React.FC = () => {
                 <i className="bi bi-filetype-sql text-primary mb-3 sd-assessment-icon"></i>
                 <h6 className="fw-bold text-dark mb-2">SQL Mastery</h6>
                 <p className="text-secondary mb-3 sd-assessment-meta">20 questions • 30 mins</p>
-                <button className="btn btn-light border w-100 fw-medium text-primary mt-auto">Take Quiz</button>
+                <button onClick={() => handleAction('Take SQL Mastery Quiz')} className="btn btn-light border w-100 fw-medium text-primary mt-auto">Take Quiz</button>
               </div>
             </div>
             <div className="col-md-4">
@@ -158,7 +239,7 @@ const SkillDevHome: React.FC = () => {
                 <i className="bi bi-git text-danger mb-3 sd-assessment-icon"></i>
                 <h6 className="fw-bold text-dark mb-2">Git & Version Control</h6>
                 <p className="text-secondary mb-3 sd-assessment-meta">15 questions • 20 mins</p>
-                <button className="btn btn-light border w-100 fw-medium text-danger mt-auto">Take Quiz</button>
+                <button onClick={() => window.open('https://www.w3schools.com/quiztest/quiztest.asp?qtest=GIT', '_blank')} className="btn btn-light border w-100 fw-medium text-danger mt-auto">Take Quiz</button>
               </div>
             </div>
             <div className="col-md-4">
@@ -166,7 +247,7 @@ const SkillDevHome: React.FC = () => {
                 <i className="bi bi-terminal text-dark mb-3 sd-assessment-icon"></i>
                 <h6 className="fw-bold text-dark mb-2">Linux Fundamentals</h6>
                 <p className="text-secondary mb-3 sd-assessment-meta">25 questions • 40 mins</p>
-                <button className="btn btn-light border w-100 fw-medium text-dark mt-auto">Take Quiz</button>
+                <button onClick={() => handleAction('Take Linux Fundamentals Quiz')} className="btn btn-light border w-100 fw-medium text-dark mt-auto">Take Quiz</button>
               </div>
             </div>
           </div>
@@ -200,7 +281,7 @@ const SkillDevHome: React.FC = () => {
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                 <i className="bi bi-shield-check text-success fs-5"></i> Verified Skills
               </h6>
-              <a href="#" className="text-primary sd-verified-edit">Edit</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); handleAction('Edit Verified Skills'); }} className="text-primary sd-verified-edit">Edit</a>
             </div>
             
             <div className="d-flex flex-wrap gap-2">
@@ -219,13 +300,54 @@ const SkillDevHome: React.FC = () => {
             </div>
           </div>
 
+          {/* Explore Courses */}
+          <div className="card border shadow-sm rounded-4 p-4 mb-4">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i className="bi bi-play-btn-fill text-danger fs-5"></i> Trending Courses
+              </h6>
+              <button onClick={() => handleAction('View All Courses')} className="btn btn-sm btn-light border rounded-pill">View All</button>
+            </div>
+            
+            <div className="list-group list-group-flush">
+              <button onClick={() => navigate('/dashboard/skill-dev/course/PLC3y8-rFHvwgg3vaYJgHGnModB54rxOk3')} className="list-group-item list-group-item-action px-0 py-3 border-bottom d-flex align-items-center gap-3">
+                <div className="bg-light rounded p-2 text-danger border shadow-sm">
+                  <i className="bi bi-youtube fs-5"></i>
+                </div>
+                <div>
+                  <h6 className="fw-bold mb-1 fs-6 text-dark">ReactJS Tutorial for Beginners</h6>
+                  <small className="text-secondary">Codevolution</small>
+                </div>
+              </button>
+              
+              <button onClick={() => navigate('/dashboard/skill-dev/course/PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU')} className="list-group-item list-group-item-action px-0 py-3 border-bottom d-flex align-items-center gap-3">
+                <div className="bg-light rounded p-2 text-danger border shadow-sm">
+                  <i className="bi bi-youtube fs-5"></i>
+                </div>
+                <div>
+                  <h6 className="fw-bold mb-1 fs-6 text-dark">Python OOP Tutorials</h6>
+                  <small className="text-secondary">Corey Schafer</small>
+                </div>
+              </button>
+
+              <button onClick={() => handleAction('Explore All Courses')} className="list-group-item list-group-item-action px-0 py-3 d-flex align-items-center gap-3">
+                <div className="bg-primary bg-opacity-10 rounded p-2 text-primary border border-primary border-opacity-25">
+                  <i className="bi bi-search fs-5"></i>
+                </div>
+                <div>
+                  <h6 className="fw-bold text-primary mb-0 fs-6">Explore Catalog</h6>
+                </div>
+              </button>
+            </div>
+          </div>
+
           {/* Certifications Earned */}
           <div className="card border shadow-sm rounded-4 p-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                 <i className="bi bi-award text-warning fs-5"></i> Certifications
               </h6>
-              <button className="btn btn-sm btn-light border rounded-pill"><i className="bi bi-plus"></i> Add</button>
+              <button onClick={() => handleAction('Add Certification')} className="btn btn-sm btn-light border rounded-pill"><i className="bi bi-plus"></i> Add</button>
             </div>
             
             <div className="d-flex gap-3 align-items-center mb-3 p-3 border rounded-3 bg-light hover-shadow transition">
@@ -248,11 +370,62 @@ const SkillDevHome: React.FC = () => {
               </div>
             </div>
             
-            <button className="btn btn-light border w-100 fw-medium text-secondary rounded-pill shadow-sm mt-4">View Portfolio</button>
+            <button onClick={() => handleAction('View Portfolio')} className="btn btn-light border w-100 fw-medium text-secondary rounded-pill shadow-sm mt-4">View Portfolio</button>
           </div>
 
         </div>
       </div>
+
+      {/* Saved Paths Modal */}
+      {showSavedModal && (
+        <div className="modal-backdrop fade show" style={{ zIndex: 1040 }}></div>
+      )}
+      <div className={`modal fade ${showSavedModal ? 'show d-block' : ''}`} tabIndex={-1} style={{ zIndex: 1050 }} onClick={() => setShowSavedModal(false)}>
+        <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" onClick={e => e.stopPropagation()}>
+          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div className="modal-header border-bottom-0 bg-light p-4">
+              <h5 className="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                <i className="bi bi-bookmark-fill text-primary"></i> Saved Learning Paths
+              </h5>
+              <button type="button" className="btn-close" onClick={() => setShowSavedModal(false)}></button>
+            </div>
+            <div className="modal-body p-4">
+              {savedCourses.length === 0 ? (
+                <div className="text-center py-5">
+                  <div className="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '80px', height: '80px' }}>
+                    <i className="bi bi-bookmark text-secondary fs-1"></i>
+                  </div>
+                  <h6 className="fw-bold text-dark">No saved paths yet</h6>
+                  <p className="text-secondary mb-0">Bookmark courses to build your personal learning library.</p>
+                </div>
+              ) : (
+                <div className="row g-4">
+                  {savedCourses.map((course) => (
+                    <div key={course.playlistId} className="col-md-6">
+                      <div className="card h-100 border shadow-sm rounded-4 hover-shadow transition overflow-hidden">
+                        <img src={course.thumbnailUrl || 'https://via.placeholder.com/640x360?text=Course'} className="card-img-top object-fit-cover" alt={course.title} style={{ height: '160px' }} />
+                        <div className="card-body p-4">
+                          <h6 className="fw-bold text-dark mb-1 text-truncate" title={course.title}>{course.title}</h6>
+                          <p className="text-secondary small mb-3">{course.channelTitle}</p>
+                          <div className="d-flex gap-2">
+                            <button onClick={() => navigate(`/dashboard/skill-dev/course/${course.playlistId}`)} className="btn btn-primary btn-sm flex-grow-1 fw-medium rounded-pill">
+                              <i className="bi bi-play-fill me-1"></i> Resume
+                            </button>
+                            <button onClick={() => toggleSaveCourse(course)} className="btn btn-light border btn-sm rounded-pill text-danger px-3">
+                              <i className="bi bi-bookmark-x-fill"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };
