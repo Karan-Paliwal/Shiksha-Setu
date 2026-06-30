@@ -6,6 +6,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { connectDB } from "./config/db";
 import { env } from "./config/env";
+import { seedScholarshipsIfEmpty } from "./seed/scholarshipSeeder";
 
 // Route imports
 import authRoutes from "./routes/auth";
@@ -58,6 +59,8 @@ const PORT = env.PORT;
 
 const startServer = async () => {
   await connectDB();
+  await seedScholarshipsIfEmpty();
+
   app.listen(PORT, () => {
     console.log(`\n🚀 ShikshaSetu Server running on http://localhost:${PORT}`);
     console.log(`📡 API Base URL: http://localhost:${PORT}/api`);

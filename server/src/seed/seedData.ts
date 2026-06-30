@@ -7,13 +7,12 @@ import { env } from "../config/env";
 import User from "../models/User";
 import Scholarship from "../models/Scholarship";
 import GovernmentScheme from "../models/GovernmentScheme";
-
-// ─── Seed Data ───────────────────────────────────────────
+import scholarshipCatalog from "../data/scholarships.json";
 
 const seedUsers = async () => {
   const existingDemo = await User.findOne({ email: "demo@shikshasetu.local" });
   if (existingDemo) {
-    console.log("⏭️  Demo user already exists, skipping...");
+    console.log("Demo user already exists, skipping...");
     return;
   }
 
@@ -26,51 +25,33 @@ const seedUsers = async () => {
     password: hashedPassword,
   });
 
-  console.log("✅ Demo user created (demo@shikshasetu.local / password123)");
+  console.log("Demo user created (demo@shikshasetu.local / password123)");
 };
 
 const seedScholarships = async () => {
-  const count = await Scholarship.countDocuments();
-  if (count > 0) {
-    console.log("⏭️  Scholarships already seeded, skipping...");
-    return;
-  }
+  await Scholarship.bulkWrite(
+    scholarshipCatalog.map(({ id: _id, ...scholarship }) => ({
+      updateOne: {
+        filter: { title: scholarship.title, source: scholarship.source },
+        update: {
+          $set: {
+            ...scholarship,
+            deadline: new Date(scholarship.deadline),
+            lastUpdated: new Date(scholarship.lastUpdated),
+          },
+        },
+        upsert: true,
+      },
+    }))
+  );
 
-  await Scholarship.insertMany([
-    {
-      title: "National Merit Scholarship",
-      amount: "₹50,000/year",
-      eligibility: "Students with 90%+ in Class 12",
-    },
-    {
-      title: "Post-Matric Scholarship for SC/ST Students",
-      amount: "Full tuition + ₹10,000/month",
-      eligibility: "SC/ST students with family income below ₹2.5 LPA",
-    },
-    {
-      title: "INSPIRE Scholarship",
-      amount: "₹80,000/year",
-      eligibility: "Top 1% in Class 12 Board Exams",
-    },
-    {
-      title: "Pragati Scholarship for Girls",
-      amount: "₹50,000/year",
-      eligibility: "Girl students in technical education, family income < ₹8 LPA",
-    },
-    {
-      title: "Central Sector Scheme of Scholarships",
-      amount: "₹20,000/year",
-      eligibility: "Top 82nd percentile in Class 12 Board Exams",
-    },
-  ]);
-
-  console.log("✅ Scholarships seeded");
+  console.log(`Scholarships seeded (${scholarshipCatalog.length} upserted from JSON catalog)`);
 };
 
 const seedGovernmentSchemes = async () => {
   const count = await GovernmentScheme.countDocuments();
   if (count > 0) {
-    console.log("⏭️  Government schemes already seeded, skipping...");
+    console.log("Government schemes already seeded, skipping...");
     return;
   }
 
@@ -97,24 +78,23 @@ const seedGovernmentSchemes = async () => {
     },
   ]);
 
-  console.log("✅ Government schemes seeded");
+  console.log("Government schemes seeded");
 };
 
-// ─── Run Seed ────────────────────────────────────────────
 const runSeed = async () => {
   try {
-    console.log("\n🌱 Starting database seed...\n");
+    console.log("\nStarting database seed...\n");
     await mongoose.connect(env.MONGO_URI);
-    console.log("✅ Connected to MongoDB\n");
+    console.log("Connected to MongoDB\n");
 
     await seedUsers();
     await seedScholarships();
     await seedGovernmentSchemes();
 
-    console.log("\n🎉 Database seeding completed!\n");
+    console.log("\nDatabase seeding completed!\n");
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seed error:", error);
+    console.error("Seed error:", error);
     process.exit(1);
   }
 };

@@ -1,3 +1,7 @@
+import { FilterQuery, Types } from "mongoose";
+import ScholarshipModel, { IScholarship } from "../models/Scholarship";
+import scholarshipCatalog from "../data/scholarships.json";
+
 export interface ScholarshipFilters {
   search?: string;
   state?: string;
@@ -21,6 +25,7 @@ export interface Scholarship {
   stream: string;
   applyUrl: string;
   detailsUrl: string;
+  logo?: string;
   source: string;
   isActive: boolean;
   lastUpdated: string;
@@ -35,85 +40,6 @@ export interface GovernmentScheme {
   applyUrl: string;
   source: string;
 }
-
-const scholarships: Scholarship[] = [
-  {
-    id: "national-merit",
-    _id: "national-merit",
-    title: "National Merit Scholarship",
-    provider: "Ministry of Education",
-    description: "Annual support for high-performing undergraduate students.",
-    amount: "INR 50,000/year",
-    eligibility: "Students with 90%+ in Class 12",
-    deadline: "2026-12-31",
-    category: "Merit",
-    state: "All India",
-    degree: "Undergraduate",
-    stream: "All",
-    applyUrl: "https://scholarships.gov.in/",
-    detailsUrl: "https://scholarships.gov.in/",
-    source: "National Scholarship Portal",
-    isActive: true,
-    lastUpdated: "2026-06-01",
-  },
-  {
-    id: "post-matric-sc-st",
-    _id: "post-matric-sc-st",
-    title: "Post-Matric Scholarship for SC/ST Students",
-    provider: "Government of India",
-    description: "Tuition and maintenance support for eligible post-matric students.",
-    amount: "Full tuition + INR 10,000/month",
-    eligibility: "SC/ST students with family income below INR 2.5 LPA",
-    deadline: "2026-10-15",
-    category: "Government",
-    state: "All India",
-    degree: "Undergraduate",
-    stream: "All",
-    applyUrl: "https://scholarships.gov.in/",
-    detailsUrl: "https://scholarships.gov.in/",
-    source: "National Scholarship Portal",
-    isActive: true,
-    lastUpdated: "2026-06-01",
-  },
-  {
-    id: "inspire",
-    _id: "inspire",
-    title: "INSPIRE Scholarship",
-    provider: "Department of Science and Technology",
-    description: "Support for students pursuing natural and basic science programs.",
-    amount: "INR 80,000/year",
-    eligibility: "Top 1% in Class 12 board exams or selected science programs",
-    deadline: "2026-11-30",
-    category: "Research",
-    state: "All India",
-    degree: "Undergraduate",
-    stream: "Science",
-    applyUrl: "https://online-inspire.gov.in/",
-    detailsUrl: "https://online-inspire.gov.in/",
-    source: "INSPIRE Portal",
-    isActive: true,
-    lastUpdated: "2026-06-01",
-  },
-  {
-    id: "pragati-girls",
-    _id: "pragati-girls",
-    title: "Pragati Scholarship for Girls",
-    provider: "AICTE",
-    description: "Financial assistance for girl students in technical education.",
-    amount: "INR 50,000/year",
-    eligibility: "Girl students in AICTE-approved technical programs with family income below INR 8 LPA",
-    deadline: "2026-09-30",
-    category: "Women",
-    state: "All India",
-    degree: "Diploma/Undergraduate",
-    stream: "Engineering",
-    applyUrl: "https://www.aicte-india.org/",
-    detailsUrl: "https://www.aicte-india.org/",
-    source: "AICTE",
-    isActive: true,
-    lastUpdated: "2026-06-01",
-  },
-];
 
 const governmentSchemes: GovernmentScheme[] = [
   {
@@ -154,8 +80,136 @@ const governmentSchemes: GovernmentScheme[] = [
   },
 ];
 
-const contains = (value: string, query: string) =>
-  value.toLowerCase().includes(query.toLowerCase());
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const normalizeDbScholarship = (scholarship: IScholarship): Scholarship => {
+  const id = scholarship._id.toString();
+  const deadline = scholarship.deadline || scholarship.createdAt || new Date();
+  const lastUpdated = scholarship.lastUpdated || scholarship.updatedAt || new Date();
+
+  return {
+    id,
+    _id: id,
+    title: scholarship.title,
+    provider: scholarship.provider,
+    description: scholarship.description,
+    amount: scholarship.amount,
+    eligibility: scholarship.eligibility,
+    deadline: deadline.toISOString(),
+    category: scholarship.category,
+    state: scholarship.state,
+    degree: scholarship.degree,
+    stream: scholarship.stream,
+    applyUrl: scholarship.applyUrl,
+    detailsUrl: scholarship.detailsUrl || scholarship.applyUrl,
+    logo: scholarship.logo,
+    source: scholarship.source,
+    isActive: scholarship.isActive !== false,
+    lastUpdated: lastUpdated.toISOString(),
+  };
+};
+
+const normalizeCatalogScholarship = (scholarship: (typeof scholarshipCatalog)[number]): Scholarship => ({
+  id: scholarship.id,
+  _id: scholarship.id,
+  title: scholarship.title,
+  provider: scholarship.provider,
+  description: scholarship.description,
+  amount: scholarship.amount,
+  deadline: scholarship.deadline,
+  eligibility: scholarship.eligibility,
+  category: scholarship.category,
+  state: scholarship.state,
+  degree: scholarship.degree,
+  stream: scholarship.stream,
+  applyUrl: scholarship.applyUrl,
+  detailsUrl: scholarship.detailsUrl,
+  logo: scholarship.logo,
+  source: scholarship.source,
+  isActive: scholarship.isActive,
+  lastUpdated: scholarship.lastUpdated,
+});
+
+const isFutureActive = (scholarship: Scholarship) =>
+  scholarship.isActive !== false && new Date(scholarship.deadline).getTime() >= Date.now();
+
+const matchesValue = (actual: string, expected?: string) => {
+  if (!expected || expected === "All") {
+    return true;
+  }
+
+  return actual.toLowerCase() === expected.toLowerCase();
+};
+
+const applyInMemoryFilters = (scholarships: Scholarship[], filters: ScholarshipFilters = {}) => {
+  const search = filters.search?.trim().toLowerCase();
+
+  return scholarships
+    .filter(isFutureActive)
+    .filter((scholarship) => matchesValue(scholarship.state, filters.state))
+    .filter((scholarship) => matchesValue(scholarship.category, filters.category))
+    .filter((scholarship) => matchesValue(scholarship.degree, filters.degree))
+    .filter((scholarship) => matchesValue(scholarship.stream, filters.stream))
+    .filter((scholarship) => {
+      if (!search) {
+        return true;
+      }
+
+      return [
+        scholarship.title,
+        scholarship.provider,
+        scholarship.description,
+        scholarship.eligibility,
+        scholarship.category,
+        scholarship.state,
+        scholarship.degree,
+        scholarship.stream,
+      ].some((value) => value.toLowerCase().includes(search));
+    })
+    .sort((first, second) => new Date(first.deadline).getTime() - new Date(second.deadline).getTime());
+};
+
+const buildScholarshipQuery = (filters: ScholarshipFilters = {}): FilterQuery<IScholarship> => {
+  const query: FilterQuery<IScholarship> = {
+    isActive: { $ne: false },
+    deadline: { $gte: new Date() },
+  };
+
+  if (filters.search?.trim()) {
+    const search = new RegExp(escapeRegex(filters.search.trim()), "i");
+    query.$or = [
+      { title: search },
+      { provider: search },
+      { description: search },
+      { eligibility: search },
+      { category: search },
+      { state: search },
+      { degree: search },
+      { stream: search },
+    ];
+  }
+
+  if (filters.state && filters.state !== "All") {
+    query.state = new RegExp(`^${escapeRegex(filters.state)}$`, "i");
+  }
+
+  if (filters.category && filters.category !== "All") {
+    query.category = new RegExp(`^${escapeRegex(filters.category)}$`, "i");
+  }
+
+  if (filters.degree && filters.degree !== "All") {
+    query.degree = new RegExp(`^${escapeRegex(filters.degree)}$`, "i");
+  }
+
+  if (filters.stream && filters.stream !== "All") {
+    query.stream = new RegExp(`^${escapeRegex(filters.stream)}$`, "i");
+  }
+
+  return query;
+};
+
+const getCatalogScholarships = (filters: ScholarshipFilters = {}) =>
+  applyInMemoryFilters(scholarshipCatalog.map(normalizeCatalogScholarship), filters);
 
 export const getOpportunitiesStatus = () => {
   return {
@@ -171,45 +225,50 @@ export const getOpportunitiesStatus = () => {
   };
 };
 
-export const getScholarships = (filters: ScholarshipFilters = {}) => {
-  return scholarships.filter((scholarship) => {
-    if (filters.search) {
-      const haystack = [
-        scholarship.title,
-        scholarship.provider,
-        scholarship.description,
-        scholarship.eligibility,
-        scholarship.category,
-        scholarship.stream,
-      ].join(" ");
+export const getScholarships = async (filters: ScholarshipFilters = {}) => {
+  const scholarships = await ScholarshipModel.find(buildScholarshipQuery(filters)).sort({ deadline: 1 });
+  const normalizedScholarships = scholarships.map(normalizeDbScholarship);
 
-      if (!contains(haystack, filters.search)) return false;
-    }
+  if (normalizedScholarships.length > 0) {
+    return normalizedScholarships;
+  }
 
-    if (filters.state && filters.state !== "All" && !contains(scholarship.state, filters.state)) {
-      return false;
-    }
-
-    if (filters.category && filters.category !== "All" && !contains(scholarship.category, filters.category)) {
-      return false;
-    }
-
-    if (filters.degree && filters.degree !== "All" && !contains(scholarship.degree, filters.degree)) {
-      return false;
-    }
-
-    if (filters.stream && filters.stream !== "All" && !contains(scholarship.stream, filters.stream)) {
-      return false;
-    }
-
-    return scholarship.isActive;
-  });
+  return getCatalogScholarships(filters);
 };
 
-export const getScholarshipById = (id: string) => {
-  return scholarships.find((scholarship) => scholarship.id === id || scholarship._id === id) || null;
+export const getScholarshipById = async (id: string) => {
+  if (Types.ObjectId.isValid(id)) {
+    const scholarship = await ScholarshipModel.findOne({
+      _id: id,
+      isActive: { $ne: false },
+      deadline: { $gte: new Date() },
+    });
+
+    if (scholarship) {
+      return normalizeDbScholarship(scholarship);
+    }
+  }
+
+  return getCatalogScholarships().find((scholarship) => scholarship.id === id) || null;
 };
 
 export const getGovernmentSchemes = () => {
   return governmentSchemes;
+};
+
+export const syncScholarships = async () => {
+  /*
+   * Placeholder for future provider synchronization.
+   *
+   * Do not scrape search engines on user requests. A production sync should run
+   * as a scheduled job and ingest official or trusted provider sources such as
+   * National Scholarship Portal, AICTE, state scholarship portals, university
+   * portals, and vetted private organizations. The API and frontend already use
+   * the same normalized contract, so this can later upsert into MongoDB without
+   * changing the UI.
+   */
+  return {
+    status: "not_configured",
+    message: "Scholarship synchronization placeholder is ready for official provider integrations.",
+  };
 };
