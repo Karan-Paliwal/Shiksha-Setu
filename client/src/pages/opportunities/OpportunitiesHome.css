@@ -39,6 +39,10 @@
   width: 65%;
 }
 
+.oh-w-85 {
+  width: 85%;
+}
+
 .oh-text-xxs {
   font-size: 0.7rem;
 }
@@ -46,4 +50,54 @@
 .oh-icon-md-alt {
   width: 50px;
   height: 50px;
+}
+
+.oh-chip-button {
+  appearance: none;
+  cursor: pointer;
+}
+
+.oh-match-row,
+.oh-deadline-row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.oh-match-row {
+  color: white;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.oh-match-row span {
+  font-size: 0.78rem;
+}
+
+.oh-deadline-row {
+  text-align: left;
+  padding: 0 0 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.oh-deadline-row:last-of-type {
+  margin-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .oh-search {
+    border-radius: 16px !important;
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  .oh-quick-chips,
+  .oh-featured {
+    flex-wrap: wrap;
+  }
 }
