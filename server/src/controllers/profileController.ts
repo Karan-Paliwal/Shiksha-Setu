@@ -45,6 +45,16 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
         if (fieldname.startsWith('marksheet_')) {
           const semesterStr = fieldname.split('_')[1];
           const semester = Number(semesterStr);
+
+          // Validate semester BEFORE running AI analysis and saving
+          const currentSem = Number(currentSemester) || user.academicProfile?.currentSemester || 1;
+          if (semester >= currentSem) {
+            res.status(400).json({
+              error: `Invalid marksheet. You are currently in Semester ${currentSem}, so you can only upload marksheets for previous semesters (Semester 1 to ${currentSem - 1}).`
+            });
+            return;
+          }
+
           // Ensure marksheets is a Map (Mongoose handles it if initialized properly)
           if (user.documents && user.documents.marksheets && typeof user.documents.marksheets.set === 'function') {
             user.documents.marksheets.set(semesterStr, fileUrl);
@@ -58,51 +68,78 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
           if (aiResult) {
              if (!user.academicProfile) user.academicProfile = {} as any;
              if (!user.academicProfile!.semesterGpas) {
-               user.academicProfile!.semesterGpas = [];
+                user.academicProfile!.semesterGpas = [];
              }
              
-             // Ensure array has enough elements up to the current semester
-             while (user.academicProfile!.semesterGpas.length < semester) {
-               user.academicProfile!.semesterGpas.push(0); // 0 acts as placeholder for missing semesters
+             // Use AI-detected semester or fall back to the one from fieldname
+             const actualSem = aiResult.semester || semester;
+
+             if (actualSem >= user.academicProfile!.currentSemester) {
+                res.status(400).json({
+                  error: `Invalid marksheet. You are currently in Semester ${user.academicProfile!.currentSemester}, so you can only upload marksheets for previous semesters (Semester 1 to ${user.academicProfile!.currentSemester - 1}). The uploaded marksheet was detected as Semester ${actualSem}.`
+                });
+                return;
+             }
+
+             // Ensure array has enough elements
+             while (user.academicProfile!.semesterGpas.length < actualSem) {
+                user.academicProfile!.semesterGpas.push(0);
+             }
+
+             // Handle consolidated transcript if available, otherwise single semester GPA
+             if (aiResult.allSemesterGpas && Object.keys(aiResult.allSemesterGpas).length > 0) {
+               for (const [semStr, gpa] of Object.entries(aiResult.allSemesterGpas)) {
+                 const idx = Number(semStr) - 1;
+                 if (idx >= 0 && gpa > 0) {
+                   while (user.academicProfile!.semesterGpas.length <= idx) {
+                     user.academicProfile!.semesterGpas.push(0);
+                   }
+                   user.academicProfile!.semesterGpas[idx] = Number(gpa.toFixed(2));
+                 }
+               }
+             } else if (aiResult.sgpa !== null && aiResult.sgpa > 0) {
+                user.academicProfile!.semesterGpas[actualSem - 1] = aiResult.sgpa;
              }
              
-             if (aiResult.sgpa !== null) {
-               user.academicProfile!.semesterGpas[semester - 1] = aiResult.sgpa;
-             }
-             
-             if (aiResult.cgpa !== null) {
-                user.academicProfile!.currentCgpa = aiResult.cgpa;
-             } else if (semester === 1 && aiResult.sgpa !== null) {
-                user.academicProfile!.currentCgpa = aiResult.sgpa;
+             if (aiResult.cgpa !== null && aiResult.cgpa > 0) {
+                 user.academicProfile!.currentCgpa = aiResult.cgpa;
+             } else if (actualSem === 1 && aiResult.sgpa !== null && aiResult.sgpa > 0) {
+                 user.academicProfile!.currentCgpa = aiResult.sgpa;
              } else {
-                const validGpas = user.academicProfile!.semesterGpas.filter(g => g > 0);
-                if (validGpas.length > 0) {
-                   user.academicProfile!.currentCgpa = Number((validGpas.reduce((a, b) => a + b, 0) / validGpas.length).toFixed(2));
-                }
+                 const validGpas = user.academicProfile!.semesterGpas.filter(g => g > 0);
+                 if (validGpas.length > 0) {
+                    user.academicProfile!.currentCgpa = Number((validGpas.reduce((a, b) => a + b, 0) / validGpas.length).toFixed(2));
+                 }
              }
              
-             if (aiResult.creditsEarned !== null) {
-                user.academicProfile!.creditsEarned = (user.academicProfile!.creditsEarned || 0) + aiResult.creditsEarned;
+             if (aiResult.creditsEarned !== null && aiResult.creditsEarned > 0) {
+                 user.academicProfile!.creditsEarned = aiResult.creditsEarned;
              }
              
+             // Limit to completed semesters only (less than current semester)
+             const currentSem = user.academicProfile!.currentSemester || 1;
+             if (user.academicProfile!.semesterGpas.length >= currentSem) {
+                user.academicProfile!.semesterGpas = user.academicProfile!.semesterGpas.slice(0, currentSem - 1);
+             }
+
              // Re-calculate average CGPA if possible
              const validGpas = user.academicProfile!.semesterGpas.filter(g => g > 0);
              if (validGpas.length > 0) {
-               const sum = validGpas.reduce((a, b) => a + b, 0);
-               user.academicProfile!.averageCgpa = Number((sum / validGpas.length).toFixed(2));
-               user.academicProfile!.highestCgpa = Math.max(...validGpas);
+                const sum = validGpas.reduce((a, b) => a + b, 0);
+                user.academicProfile!.averageCgpa = Number((sum / validGpas.length).toFixed(2));
+                user.academicProfile!.highestCgpa = Math.max(...validGpas);
 
-               let trend = 0;
-               if (user.academicProfile!.semesterGpas.length > 1) {
-                 trend = user.academicProfile!.semesterGpas[user.academicProfile!.semesterGpas.length - 1] - user.academicProfile!.semesterGpas[0];
-               }
-               user.academicProfile!.predictedCgpa = Number(
-                 Math.min(10.0, Math.max(4.0, user.academicProfile!.averageCgpa + trend * 0.15 + 0.2)).toFixed(2)
-               );
+                let trend = 0;
+                if (user.academicProfile!.semesterGpas.length > 1) {
+                  trend = user.academicProfile!.semesterGpas[user.academicProfile!.semesterGpas.length - 1] - user.academicProfile!.semesterGpas[0];
+                }
+                user.academicProfile!.predictedCgpa = Number(
+                  Math.min(10.0, Math.max(4.0, user.academicProfile!.averageCgpa + trend * 0.15 + 0.2)).toFixed(2)
+                );
              }
              
              if (aiResult.subjects && aiResult.subjects.length > 0) {
-               user.academicProfile!.subjects = aiResult.subjects;
+                user.academicProfile!.subjects = aiResult.subjects;
              }
           }
         } else if (fieldname === 'timetable') {
@@ -115,9 +152,29 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
       }
     }
 
+    // Clean up current or higher semester marksheets from documents.marksheets Map
+    const currentSem = user.academicProfile?.currentSemester || 1;
+    const documents = user.documents || ({ marksheets: new Map() } as any);
+    if (documents.marksheets) {
+      if (typeof documents.marksheets.delete === "function") {
+        for (const key of Array.from(documents.marksheets.keys())) {
+          if (Number(key) >= currentSem) {
+            documents.marksheets.delete(key);
+          }
+        }
+      } else {
+        for (const key of Object.keys(documents.marksheets)) {
+          if (Number(key) >= currentSem) {
+            delete (documents.marksheets as any)[key];
+          }
+        }
+      }
+    }
+
     user.isProfileComplete = true;
     user.markModified('academicProfile');
     user.markModified('documents');
+    user.markModified('documents.marksheets');
 
     await user.save();
 

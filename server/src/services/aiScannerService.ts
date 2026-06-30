@@ -10,6 +10,7 @@ const geminiApiKey = process.env.GEMINI_API_KEY || "";
 const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
 
 export interface MarksheetAnalysisResult {
+  semester: number | null;   // Detected semester number
   sgpa: number | null;       // GPA for the specific semester
   cgpa: number | null;       // Cumulative GPA up to that semester
   creditsEarned: number | null;
@@ -59,7 +60,7 @@ export const analyzeMarksheetWithAI = async (
 
     const prompt = `You are an expert Indian university academic document analyzer with deep knowledge of Indian grading systems.
 
-This is a student marksheet or academic transcript for Semester ${semester}.
+This is a student marksheet or academic transcript.
 It could be a single semester result, or a consolidated transcript showing multiple semesters.
 
 TASK: Extract grade/GPA data from this document with 100% accuracy. Read every number visible.
@@ -73,6 +74,7 @@ IMPORTANT NOTES FOR INDIAN UNIVERSITIES:
 
 RETURN ONLY this exact JSON format, no markdown, no explanation:
 {
+  "semester": <number or null>,
   "sgpa": <number or null>,
   "cgpa": <number or null>,
   "creditsEarned": <number or null>,
@@ -81,7 +83,8 @@ RETURN ONLY this exact JSON format, no markdown, no explanation:
 }
 
 Rules:
-- "sgpa" = the GPA/SPI/SGPA for semester ${semester} specifically
+- "semester" = the semester number this single-semester marksheet is for (e.g. 1, 2, 3...). If the document is a consolidated transcript showing multiple semesters, set this to the highest/latest semester number shown.
+- "sgpa" = the GPA/SPI/SGPA for this semester specifically
 - "cgpa" = the cumulative/overall GPA shown on this document
 - "creditsEarned" = total credits earned (cumulative number if shown)
 - "allSemesterGpas" = ONLY fill this if the document shows results for MORE than one semester (consolidated transcript). Map each visible semester number to its SGPA.
@@ -128,10 +131,11 @@ Rules:
       return null;
     }
 
-    const parsed = JSON.parse(jsonString) as MarksheetAnalysisResult;
+    const parsed = JSON.parse(jsonString) as any;
 
     // Validate the parsed result
     const result: MarksheetAnalysisResult = {
+      semester: typeof parsed.semester === "number" && parsed.semester > 0 ? parsed.semester : null,
       sgpa: typeof parsed.sgpa === "number" && parsed.sgpa > 0 ? parsed.sgpa : null,
       cgpa: typeof parsed.cgpa === "number" && parsed.cgpa > 0 ? parsed.cgpa : null,
       creditsEarned: typeof parsed.creditsEarned === "number" && parsed.creditsEarned > 0 ? parsed.creditsEarned : null,
@@ -139,10 +143,10 @@ Rules:
         ? parsed.allSemesterGpas
         : null,
       subjects: Array.isArray(parsed.subjects) 
-        ? parsed.subjects.map(s => ({
+        ? parsed.subjects.map((s: any) => ({
             name: s.name ? String(s.name) : "Unknown",
             score: Number(s.score) || 0
-          })).filter(s => s.score > 0)
+          })).filter((s: any) => s.score > 0)
         : null,
     };
 

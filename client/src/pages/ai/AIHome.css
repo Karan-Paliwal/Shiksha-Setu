@@ -1,10 +1,13 @@
 .ai-page-wrapper {
-  height: calc(100vh - 80px);
-  padding-bottom: 1rem;
+  height: auto;
+  min-height: calc(100vh - 150px);
+  overflow: visible;
+  padding-bottom: 2rem;
 }
 
 .ai-chat-container {
-  height: 100%;
+  height: auto;
+  min-height: 100%;
   border-radius: 1.5rem;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
 }
@@ -126,4 +129,100 @@
 .ai-input-wrapper:focus-within {
   border-color: #0ea5e9;
   box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+}
+
+/* Premium B.Tech tech-centric overrides */
+.ai-timer-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(148, 163, 184, 0.1) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15) !important;
+}
+
+.ai-timer-text-cyber {
+  font-family: 'SF Mono', Consolas, Monaco, monospace;
+  font-size: 3.2rem !important;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+}
+
+.ai-preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.ai-preset-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+
+.ai-preset-btn.active {
+  background: #38bdf8 !important;
+  color: #0f172a !important;
+  border-color: #38bdf8 !important;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+.ai-input-edit-cyber {
+  background: rgba(15, 23, 42, 0.5) !important;
+  color: #38bdf8 !important;
+  border: 1.5px solid #38bdf8 !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2) !important;
+}
+
+.ai-input-edit-cyber:focus {
+  border-color: #818cf8 !important;
+  box-shadow: 0 0 15px rgba(129, 140, 248, 0.4) !important;
+}
+
+/* Cyber card styled empty state */
+.ai-cyber-welcome-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  border-radius: 1.5rem !important;
+  padding: 2.5rem !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03) !important;
+  max-width: 550px;
+}
+
+.ai-badge-specialized {
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  background: rgba(14, 165, 233, 0.05);
+}
+
+.ai-badge-takeaways {
+  background: rgba(14, 165, 233, 0.08) !important;
+  color: #0284c7 !important;
+  border: 1.5px solid rgba(14, 165, 233, 0.12) !important;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.ai-badge-recs {
+  background: rgba(168, 85, 247, 0.08) !important;
+  color: #7e22ce !important;
+  border: 1.5px solid rgba(168, 85, 247, 0.12) !important;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.ai-sidebar-active {
+  background-color: rgba(14, 165, 233, 0.08) !important;
+  border-left: 3px solid #0ea5e9 !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
 }

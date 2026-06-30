@@ -176,9 +176,9 @@ const Dashboard: React.FC = () => {
 
   const displayPredictedCgpa = profile.predictedCgpa || 0;
 
-  // Use ONLY real semester GPA data from the user's profile
+  // Use ONLY completed semesters' GPA data (less than currentSemester)
   const rawSemesterGpas: number[] = (profile.semesterGpas && profile.semesterGpas.length > 0)
-    ? profile.semesterGpas
+    ? profile.semesterGpas.slice(0, currentSemester - 1)
     : [];
 
   // Compute valid GPAs (non-zero entries only)

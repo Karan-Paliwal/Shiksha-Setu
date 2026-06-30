@@ -1,11 +1,32 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface IMessage {
+  id: string;
+  text: string;
+  isAi: boolean;
+  time: string;
+}
+
 export interface IAIChatHistory extends Document {
   userId: mongoose.Types.ObjectId;
-  prompt: string;
-  response: string;
+  sessionId: string;
+  name: string;
+  messages: IMessage[];
+  insights: {
+    takeaways: string[];
+    recommendations: string[];
+  };
+  mode: string;
   createdAt: Date;
+  updatedAt: Date;
 }
+
+const MessageSchema = new Schema<IMessage>({
+  id: { type: String, required: true },
+  text: { type: String, required: true },
+  isAi: { type: Boolean, required: true },
+  time: { type: String, required: true },
+});
 
 const AIChatHistorySchema = new Schema<IAIChatHistory>({
   userId: {
@@ -13,15 +34,29 @@ const AIChatHistorySchema = new Schema<IAIChatHistory>({
     ref: "User",
     required: true,
   },
-  prompt: {
+  sessionId: {
     type: String,
-    required: [true, "Prompt is required"],
+    required: true,
+    index: true,
   },
-  response: {
+  name: {
     type: String,
-    required: [true, "Response is required"],
+    required: true,
+  },
+  messages: [MessageSchema],
+  insights: {
+    takeaways: { type: [String], default: [] },
+    recommendations: { type: [String], default: [] },
+  },
+  mode: {
+    type: String,
+    default: "default",
   },
   createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
     type: Date,
     default: Date.now,
   },
