@@ -80,7 +80,7 @@ const Landing: React.FC = () => {
       <nav className="navbar navbar-expand-lg navbar-light lp-navbar position-sticky top-0 z-3 border-bottom px-3 px-md-5 py-3">
         <div className="container-fluid d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-            <img src="/logo.jpeg" alt="Shiksha Setu Logo" style={{ height: "36px", width: "36px", objectFit: "cover", borderRadius: "8px" }} />
+            <img src="/final-logo.png" alt="Shiksha Setu Logo" style={{ height: "36px", width: "36px", objectFit: "cover", borderRadius: "8px" }} />
             <span className="fw-bold fs-4 text-ss-primary">Shiksha Setu</span>
           </div>
           <div className="d-none d-md-flex gap-4">
@@ -269,7 +269,7 @@ const Landing: React.FC = () => {
           <div className="row g-5">
             <div className="col-12 col-lg-4">
               <div className="d-flex align-items-center gap-2 mb-3">
-                <img src="/logo.jpeg" alt="Shiksha Setu Logo" style={{ height: "32px", width: "32px", objectFit: "cover", borderRadius: "6px" }} />
+                <img src="/final-logo.png" alt="Shiksha Setu Logo" style={{ height: "32px", width: "32px", objectFit: "cover", borderRadius: "6px" }} />
                 <span className="lp-footer-brand text-white">Shiksha Setu</span>
               </div>
               <p className="lp-footer-desc">

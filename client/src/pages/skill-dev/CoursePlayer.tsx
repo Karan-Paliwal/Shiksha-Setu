@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import YouTube, { YouTubeEvent } from 'react-youtube';
 import api from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
+import CertificateViewerModal from '../../components/CertificateViewerModal';
 
 interface Video {
   id: string;
@@ -22,6 +24,7 @@ interface CourseDetails {
 const CoursePlayer: React.FC = () => {
   const { playlistId } = useParams<{ playlistId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [course, setCourse] = useState<CourseDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,8 +33,13 @@ const CoursePlayer: React.FC = () => {
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
   const [completedVideos, setCompletedVideos] = useState<string[]>([]);
 
-  // Hardcoded for testing. You'd normally get this from your Auth context
-  const mockUserId = "60d0fe4f5311236168a109ca";
+  // Watch timer reference
+  const watchTimerRef = useRef<any>(null);
+
+  // Certificate states
+  const [claiming, setClaiming] = useState(false);
+  const [claimedCert, setClaimedCert] = useState<any | null>(null);
+  const [showCertViewer, setShowCertViewer] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -49,6 +57,17 @@ const CoursePlayer: React.FC = () => {
         const progRes = await api.get(`/courses/progress/${playlistId}`);
         setCompletedVideos(progRes.data.completedVideoIds || []);
 
+        // Fetch user certifications to see if already claimed
+        try {
+          const certRes = await api.get('/certifications');
+          const existing = certRes.data.find((c: any) => c.playlistId === playlistId);
+          if (existing) {
+            setClaimedCert(existing);
+          }
+        } catch (certErr) {
+          console.error("Failed to fetch certifications in player:", certErr);
+        }
+
       } catch (err: any) {
         setError(err.response?.data?.message || err.message || 'Failed to fetch');
       } finally {
@@ -59,7 +78,33 @@ const CoursePlayer: React.FC = () => {
     if (playlistId) {
       fetchCourseData();
     }
+
+    return () => {
+      if (watchTimerRef.current) {
+        clearInterval(watchTimerRef.current);
+      }
+    };
   }, [playlistId]);
+
+  const startWatchTimer = () => {
+    // Clear any existing timer first
+    if (watchTimerRef.current) clearInterval(watchTimerRef.current);
+
+    watchTimerRef.current = setInterval(async () => {
+      try {
+        await api.post('/courses/learning-stats/record-time', { timeSpent: 0.5 }); // record 30 seconds
+      } catch (err) {
+        console.error("Failed to record learning time:", err);
+      }
+    }, 30000); // 30 seconds
+  };
+
+  const stopWatchTimer = () => {
+    if (watchTimerRef.current) {
+      clearInterval(watchTimerRef.current);
+      watchTimerRef.current = null;
+    }
+  };
 
   const handleVideoEnd = async (event: YouTubeEvent) => {
     if (!currentVideo) return;
@@ -85,6 +130,19 @@ const CoursePlayer: React.FC = () => {
     }
   };
 
+  const handleClaimCertificate = async () => {
+    setClaiming(true);
+    try {
+      const res = await api.post(`/certifications/claim-internal/${playlistId}`);
+      setClaimedCert(res.data.certification);
+      setShowCertViewer(true);
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.message || "Failed to claim certificate");
+    } finally {
+      setClaiming(false);
+    }
+  };
+
   const opts = {
     height: '100%',
     width: '100%',
@@ -102,6 +160,53 @@ const CoursePlayer: React.FC = () => {
 
   return (
     <div className="container-fluid py-4 fade-in">
+      
+      {/* Congratulations Card */}
+      {progressPercent === 100 && (
+        <div className="card border-success shadow-sm rounded-4 p-4 mb-4" style={{ backgroundColor: '#f3faf7', border: '1px solid #def7ec' }}>
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div className="d-flex align-items-center gap-3">
+              <div className="bg-success bg-opacity-10 text-success rounded-circle p-3 d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
+                <i className="bi bi-trophy-fill fs-3"></i>
+              </div>
+              <div>
+                <h4 className="fw-bold text-success mb-1">Congratulations! Course Completed! 🎉</h4>
+                <p className="text-secondary mb-0 small">
+                  You have watched all {totalVideos} modules of this course. You are now eligible to claim your verified certificate of completion.
+                </p>
+              </div>
+            </div>
+            <div>
+              {claimedCert ? (
+                <button 
+                  onClick={() => setShowCertViewer(true)} 
+                  className="btn btn-success px-4 py-2 rounded-pill fw-medium d-flex align-items-center gap-2 shadow-sm"
+                >
+                  <i className="bi bi-award-fill"></i> View Certificate
+                </button>
+              ) : (
+                <button 
+                  onClick={handleClaimCertificate} 
+                  className="btn btn-primary px-4 py-2 rounded-pill fw-medium d-flex align-items-center gap-2 shadow-sm"
+                  disabled={claiming}
+                >
+                  {claiming ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Claiming...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-award"></i> Claim Certificate
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-4 d-flex justify-content-between align-items-center">
         <div>
           <button onClick={() => navigate('/dashboard/skill-dev')} className="btn btn-sm btn-light border mb-2">
@@ -127,7 +232,9 @@ const CoursePlayer: React.FC = () => {
                 <YouTube
                   videoId={currentVideo.id}
                   opts={opts}
-                  onEnd={handleVideoEnd}
+                  onPlay={startWatchTimer}
+                  onPause={stopWatchTimer}
+                  onEnd={(e: any) => { stopWatchTimer(); handleVideoEnd(e); }}
                   className="position-absolute top-0 start-0 w-100 h-100"
                 />
               ) : (
@@ -191,6 +298,22 @@ const CoursePlayer: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Certificate Viewer Modal */}
+      {claimedCert && (
+        <CertificateViewerModal 
+          show={showCertViewer}
+          onClose={() => setShowCertViewer(false)}
+          certData={{
+            title: course.title,
+            issuer: 'ShikshaSetu',
+            issueDate: claimedCert.issueDate,
+            credentialId: claimedCert.credentialId,
+            userName: user?.name || "Student"
+          }}
+        />
+      )}
+
     </div>
   );
 };

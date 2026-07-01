@@ -22,7 +22,7 @@ interface Session {
 
 const modeDetails: Record<string, { title: string; desc: string; icon: string; suggestions: string[] }> = {
   default: {
-    title: "AI B.Tech Study Assistant",
+    title: "AI Study Assistant",
     desc: "Ask any academic doubt, solve engineering problems, paste code, or analyze study materials.",
     icon: "bi-robot",
     suggestions: [

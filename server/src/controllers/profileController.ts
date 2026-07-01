@@ -196,7 +196,32 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
     
     res.status(200).json(user);
   } catch (error: any) {
-    console.error("Get Profile Error:", error.message);
     res.status(500).json({ error: "Server error getting profile" });
+  }
+};
+
+export const updateSkills = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+    const { skills } = req.body;
+
+    if (!Array.isArray(skills)) {
+      res.status(400).json({ error: "Skills must be an array of strings" });
+      return;
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    user.skills = skills;
+    await user.save();
+
+    res.status(200).json({ message: "Skills updated successfully", skills: user.skills });
+  } catch (error: any) {
+    console.error("Update Skills Error:", error.message);
+    res.status(500).json({ error: "Server error updating skills" });
   }
 };

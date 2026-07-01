@@ -32,6 +32,7 @@ export interface User {
   };
   createdAt: string;
   profilePicture?: string;
+  skills?: string[];
 }
 
 export interface AuthResponse {

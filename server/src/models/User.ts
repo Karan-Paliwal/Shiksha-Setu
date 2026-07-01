@@ -33,6 +33,11 @@ export interface IUser extends Document {
   profileDetails?: IProfileDetails;
   documents?: IDocuments;
   profilePicture?: string;
+  skills: string[];
+  dailyLearningGoal: number;
+  todayLearningTime: number;
+  learningStreak: number;
+  lastActiveDate?: Date;
   createdAt: Date;
 }
 
@@ -93,6 +98,25 @@ const UserSchema = new Schema<IUser>({
   profilePicture: {
     type: String,
     default: "",
+  },
+  skills: {
+    type: [String],
+    default: ["Python", "Data Structures", "HTML/CSS"] // Seed with initial default skills
+  },
+  dailyLearningGoal: {
+    type: Number,
+    default: 60
+  },
+  todayLearningTime: {
+    type: Number,
+    default: 0
+  },
+  learningStreak: {
+    type: Number,
+    default: 0
+  },
+  lastActiveDate: {
+    type: Date
   }
 });
 

@@ -7,5 +7,6 @@ const router = Router();
 
 router.put("/setup", authMiddleware, upload.any(), profileController.setupProfile);
 router.get("/me", authMiddleware, profileController.getProfile);
+router.put("/skills", authMiddleware, profileController.updateSkills);
 
 export default router;
