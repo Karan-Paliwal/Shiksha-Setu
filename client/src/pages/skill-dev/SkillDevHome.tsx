@@ -12,6 +12,7 @@ const SkillDevHome: React.FC = () => {
   const [activeCourses, setActiveCourses] = useState<any[]>([]);
   const [savedCourses, setSavedCourses] = useState<any[]>([]);
   const [showSavedModal, setShowSavedModal] = useState(false);
+  const [showAllQuizzes, setShowAllQuizzes] = useState(false);
 
   // Certification states
   const [certifications, setCertifications] = useState<any[]>([]);
@@ -266,7 +267,6 @@ const SkillDevHome: React.FC = () => {
               <h5 className="fw-bold mb-1">Skill Assessments</h5>
               <p className="text-secondary mb-0 sd-assessment-subtitle">Take quizzes to validate your skills and earn profile badges.</p>
             </div>
-            <button onClick={() => handleAction('Filter Assessments')} className="btn btn-light border rounded-pill px-3 shadow-sm"><i className="bi bi-filter"></i> Filter</button>
           </div>
 
           <div className="row g-4 mb-4">
@@ -294,6 +294,84 @@ const SkillDevHome: React.FC = () => {
                 <button onClick={() => window.open('https://www.proprofs.com/quiz-school/story.php?title=commands-linux', '_blank')} className="btn btn-light border w-100 fw-medium text-dark mt-auto">Take Quiz</button>
               </div>
             </div>
+            
+            {showAllQuizzes && (
+              <>
+                {/* New Quiz 1 */}
+                <div className="col-md-4">
+                  <div className="card border shadow-sm rounded-4 p-4 text-center hover-shadow transition h-100">
+                    <i className="bi bi-database text-info mb-3 sd-assessment-icon"></i>
+                    <h6 className="fw-bold text-dark mb-2">W3Schools - SQL Quiz</h6>
+                    <p className="text-secondary small mb-3">Focus: Database & SQL Mastery. A classic, direct quiz testing essential SQL commands, queries, and syntax basics.</p>
+                    <button onClick={() => window.open('https://www.w3schools.com/sql/sql_quiz.asp', '_blank')} className="btn btn-light border w-100 fw-medium text-info mt-auto">Take Quiz</button>
+                  </div>
+                </div>
+
+                {/* New Quiz 2 */}
+                <div className="col-md-4">
+                  <div className="card border shadow-sm rounded-4 p-4 text-center hover-shadow transition h-100">
+                    <i className="bi bi-git text-danger mb-3 sd-assessment-icon"></i>
+                    <h6 className="fw-bold text-dark mb-2">TutorialsPoint - Git Basic Concepts</h6>
+                    <p className="text-secondary small mb-3">Focus: Git & Version Control. Evaluates foundational understanding of repositories, commits, branches, and general workflows.</p>
+                    <button onClick={() => window.open('https://www.tutorialspoint.com/git/quiz_on_git_basic_concepts.htm', '_blank')} className="btn btn-light border w-100 fw-medium text-danger mt-auto">Take Quiz</button>
+                  </div>
+                </div>
+
+                {/* New Quiz 3 */}
+                <div className="col-md-4">
+                  <div className="card border shadow-sm rounded-4 p-4 text-center hover-shadow transition h-100">
+                    <i className="bi bi-pc-display text-dark mb-3 sd-assessment-icon"></i>
+                    <h6 className="fw-bold text-dark mb-2">Guru99 - OS Mock Test</h6>
+                    <p className="text-secondary small mb-3">Focus: Linux & OS Fundamentals. A clean, multi-question online certification test to enhance operating system knowledge.</p>
+                    <button onClick={() => window.open('https://career.guru99.com/operating-system-quiz/', '_blank')} className="btn btn-light border w-100 fw-medium text-dark mt-auto">Take Quiz</button>
+                  </div>
+                </div>
+
+                {/* New Quiz 4 */}
+                <div className="col-md-4">
+                  <div className="card border shadow-sm rounded-4 p-4 text-center hover-shadow transition h-100">
+                    <i className="bi bi-filetype-py text-warning mb-3 sd-assessment-icon"></i>
+                    <h6 className="fw-bold text-dark mb-2">W3Schools - Python Quiz</h6>
+                    <p className="text-secondary small mb-3">Focus: Python Programming. A widely accepted 25-question quiz to test fundamental Python programming concepts.</p>
+                    <button onClick={() => window.open('https://www.w3schools.com/python/python_quiz.asp', '_blank')} className="btn btn-light border w-100 fw-medium text-warning mt-auto">Take Quiz</button>
+                  </div>
+                </div>
+
+                {/* New Quiz 5 */}
+                <div className="col-md-4">
+                  <div className="card border shadow-sm rounded-4 p-4 text-center hover-shadow transition h-100">
+                    <i className="bi bi-cup-hot text-danger mb-3 sd-assessment-icon"></i>
+                    <h6 className="fw-bold text-dark mb-2">W3Schools - Java Quiz</h6>
+                    <p className="text-secondary small mb-3">Focus: Java Programming. A quick practical assessment for checking syntax and core programming logic in Java.</p>
+                    <button onClick={() => window.open('https://www.w3schools.com/java/java_quiz.asp', '_blank')} className="btn btn-light border w-100 fw-medium text-danger mt-auto">Take Quiz</button>
+                  </div>
+                </div>
+
+                {/* New Quiz 6 */}
+                <div className="col-md-4">
+                  <div className="card border shadow-sm rounded-4 p-4 text-center hover-shadow transition h-100">
+                    <i className="bi bi-github text-dark mb-3 sd-assessment-icon"></i>
+                    <h6 className="fw-bold text-dark mb-2">TutorialsPoint - Git Intro Quiz</h6>
+                    <p className="text-secondary small mb-3">Focus: Version Control Basics. Perfect for beginners to validate their basic understanding of distributed version control systems.</p>
+                    <button onClick={() => window.open('https://www.tutorialspoint.com/git/quiz_on_git-introduction.htm', '_blank')} className="btn btn-light border w-100 fw-medium text-dark mt-auto">Take Quiz</button>
+                  </div>
+                </div>
+              </>
+            )}
+
+          </div>
+
+          <div className="text-center mb-5 mt-3">
+            <button 
+              onClick={() => setShowAllQuizzes(!showAllQuizzes)} 
+              className="btn btn-outline-primary rounded-pill px-4 fw-medium shadow-sm"
+            >
+              {showAllQuizzes ? (
+                <><i className="bi bi-chevron-up"></i> Show Less</>
+              ) : (
+                <><i className="bi bi-chevron-down"></i> See More Assessments</>
+              )}
+            </button>
           </div>
 
           {/* Certifications Earned Section */}

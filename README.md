@@ -20,6 +20,46 @@ The MERN stack with TypeScript ensures type safety, excellent developer experien
 
 ---
 
+## ✨ Comprehensive Feature List
+
+### 1. 🔐 Core Authentication & User Management
+* **JWT-Based Authentication**: Secure login and signup flow using encrypted tokens.
+* **Smart Onboarding Flow**: Automatic detection of incomplete profiles with a forced redirection to an onboarding form.
+* **Dynamic Profile Avatars**: Auto-generation of profile avatars based on the user's initials (using UI Avatars API) if a custom picture isn't provided.
+* **Protected & Public Routing**: Strict route guards ensuring authenticated users can't access login pages, and unauthenticated users can't access the dashboard.
+
+### 2. 📊 Academic Hub & Dashboard
+* **AI Marksheet Scanner**: Allows users to upload a marksheet image (JPG/PNG/PDF), triggering a 5-step AI vision process (Cloudinary + Gemini) that extracts SGPAs and CGPAs automatically.
+* **Interactive Semester Trend Graph**: A custom-built SVG line chart that plots semester-over-semester GPA trends dynamically without relying on heavy chart libraries.
+* **Academic Metric Cards**: Glassmorphism cards displaying Current CGPA vs Target CGPA, Progress bar tracking Credits Earned out of Total Credits, and Predicted Degree CGPA.
+* **Performance Analytics Panel**: Calculates your "Highest CGPA," "Average CGPA," and percentage-based "Improvement Rate."
+* **Timetable/Schedule Manager**: A modal-driven feature allowing students to map out their weekly classes (Course Name, Day, Time, and Location) and view them in a clean table.
+
+### 3. 🔍 Navigation & UI Elements
+* **Smart Global Search**: The top navbar search bar scans keywords (e.g., typing "cv" or "portfolio" redirects to the resume builder, "mock" redirects to interview prep) instead of just filtering text.
+* **Responsive 3x3 Features Grid**: A dedicated `/features` page and a smooth, animated landing page layout for feature discovery.
+* **Interactive FAQ Accordion**: A togglable FAQ section on the landing page for quick information access.
+
+### 4. 📄 ATS-Friendly AI Resume Builder
+* **Strict ATS Compliance**: Enforces a single-column layout with standard fonts (no graphics or tables) ensuring high parse rates in ATS software.
+* **Conditional "Fresher" Logic**: Automatically hides or formats the work experience section if the user classifies as a fresher.
+* **Searchable PDF Export**: Generates and downloads resumes with selectable text metadata for accurate parsing by recruiters.
+
+### 5. 🤖 AI Study Assistant 
+* **Conversational AI Tutor**: Interface to chat and solve doubts instantly.
+* **Personalized Generation**: Ability to generate study guides, revision notes, and syllabus-based flashcards.
+
+### 6. 💼 Opportunities & Placement Tracker
+* **Scholarship Matcher**: Filters national and international scholarships based on the student's academic profile.
+* **Application Status Tracking**: A Kanban or list-style dashboard to track stages of internships/job applications.
+
+### 7. 🎯 Skill Development & Interview Prep
+* **Explore Courses Portal**: Browse expert-curated learning roadmaps.
+* **Integrated Course Player**: A dedicated page (`/dashboard/skill-dev/course/:playlistId`) for streaming tutorials.
+* **Interview Question Bank**: Access to practice questions and mock interview preparations.
+
+---
+
 ## 📁 Repository Structure
 
 ```text

@@ -6,6 +6,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 
 // ─── Lazy Loaded Pages ───────────────────────────────────
 const Landing = lazy(() => import("../pages/Landing"));
+const Features = lazy(() => import("../pages/Features"));
 const Login = lazy(() => import("../pages/Login"));
 const Signup = lazy(() => import("../pages/Signup"));
 const Dashboard = lazy(() => import("../pages/Dashboard"));
@@ -57,6 +58,7 @@ const AppRoutes: React.FC = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
+        <Route path="/features" element={<Features />} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
 

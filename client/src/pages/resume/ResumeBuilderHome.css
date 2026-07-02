@@ -6,3 +6,49 @@
 .rb-text-sm {
   font-size: 0.85rem;
 }
+
+@media print {
+  /* Hide everything except the resume template container */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Make sure background colors (like header lines) are printed */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .resume-preview-wrapper,
+  .resume-preview-wrapper * {
+    visibility: visible;
+  }
+  
+  .resume-preview-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .no-print, .no-print * {
+    display: none !important;
+  }
+
+  .resume-paper-container {
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100%;
+    max-width: none;
+  }
+
+  /* ATS specific overrides for print to keep it strictly standard */
+  .ats-resume-container {
+    padding: 0 !important;
+    color: #000 !important;
+    background-color: transparent !important;
+  }
+}

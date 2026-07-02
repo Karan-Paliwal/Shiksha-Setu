@@ -35,42 +35,42 @@ const Landing: React.FC = () => {
       bgClass: "lp-icon-blue",
       title: "AI Study Assistant",
       desc: "Instant doubt solving, personalized revision notes, and exam prep flows powered by advanced AI models.",
-      link: "#"
+      link: "/features"
     },
     {
       iconClass: "bi-mortarboard",
       bgClass: "lp-icon-indigo",
       title: "Scholarship Finder",
       desc: "Match with thousands of national and international scholarships based on your unique profile and academic merit.",
-      link: "#"
+      link: "/features"
     },
     {
       iconClass: "bi-journal-text",
       bgClass: "lp-icon-cyan",
       title: "Academic Hub",
       desc: "Manage your smart timetable and calculate your CGPA with beautiful visual analytics.",
-      link: "#"
+      link: "/features"
     },
     {
       iconClass: "bi-target",
       bgClass: "lp-icon-emerald",
       title: "Skill Development",
       desc: "Expert-curated learning roadmaps and certifications to help you bridge the gap between classroom and career.",
-      link: "#"
+      link: "/features"
     },
     {
       iconClass: "bi-briefcase",
       bgClass: "lp-icon-violet",
       title: "Placement Tracker",
       desc: "Stay on top of internship and job applications with a centralized dashboard and status tracking notifications.",
-      link: "#"
+      link: "/features"
     },
     {
       iconClass: "bi-patch-check",
       bgClass: "lp-icon-pink",
       title: "ATS Resume Builder",
       desc: "Create industry-standard, ATS-friendly resumes in minutes with live previews and professional templates.",
-      link: "#"
+      link: "/features"
     }
   ];
 
@@ -82,9 +82,6 @@ const Landing: React.FC = () => {
           <div className="d-flex align-items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
             <img src="/final-logo.png" alt="Shiksha Setu Logo" style={{ height: "36px", width: "36px", objectFit: "cover", borderRadius: "8px" }} />
             <span className="fw-bold fs-4 text-ss-primary">Shiksha Setu</span>
-          </div>
-          <div className="d-none d-md-flex gap-4">
-            <a href="#features" className="text-decoration-none nav-link-custom">Features</a>
           </div>
           <div className="d-flex gap-3 align-items-center">
             <button className="btn fw-semibold text-ss-text hover-primary" onClick={() => navigate("/login")}>Log in</button>
@@ -113,8 +110,8 @@ const Landing: React.FC = () => {
           <button className="btn-ss-primary btn-lg px-4 px-md-5 py-3 fs-6 fw-bold" onClick={() => navigate("/login")}>
             Get Started for Free
           </button>
-          <button className="btn-ss-outline btn-lg px-4 px-md-5 py-3 fs-6 fw-bold bg-white shadow-sm" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>
-            Watch Demo
+          <button className="btn-ss-outline btn-lg px-4 px-md-5 py-3 fs-6 fw-bold bg-white shadow-sm" onClick={() => navigate("/features")}>
+            Features
           </button>
         </div>
 
@@ -190,7 +187,7 @@ const Landing: React.FC = () => {
                 A unified platform that handles the complexities of student life, so you can focus on learning and growing.
               </p>
             </div>
-            <a href="#features" className="lp-view-features-btn mt-2 mt-md-0">
+            <a href="/features" onClick={(e) => { e.preventDefault(); navigate("/features"); }} className="lp-view-features-btn mt-2 mt-md-0">
               <span>View All Features</span>
               <i className="bi bi-arrow-right"></i>
             </a>
@@ -205,7 +202,7 @@ const Landing: React.FC = () => {
                   </div>
                   <h3 className="lp-feature-title">{feature.title}</h3>
                   <p className="lp-feature-desc">{feature.desc}</p>
-                  <a href={feature.link} className="lp-feature-link">
+                  <a href={feature.link} onClick={(e) => { e.preventDefault(); navigate(feature.link); }} className="lp-feature-link">
                     <span>Explore Feature</span>
                     <i className="bi bi-arrow-right"></i>
                   </a>
