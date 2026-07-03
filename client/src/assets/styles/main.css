@@ -73,6 +73,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─── Custom Cursor ───────────────────────────────────────── */
+/* Uses the exact cursor file in `client/public/new-cursor.png` */
+html, body {
+  /*
+    Use a PNG image as a custom cursor for the whole site.
+    - Place your image at `client/public/new-cursor.png` (public root).
+    - For best cross-browser support, provide a `.cur` or `.ico` fallback
+      and a positional hotspot (x y). The hotspot below is `0 0`.
+    - Browsers will fall back to `auto` if the image can't be used.
+  */
+  cursor: url('/new-cursor.cur'), url('/new-cursor.png') 0 0, auto;
+}
+
+/* Keep native text cursor inside editable fields */
+input, textarea, [contenteditable] {
+  cursor: text !important;
+}
+
 a {
   text-decoration: none;
   color: inherit;
