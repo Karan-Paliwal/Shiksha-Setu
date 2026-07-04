@@ -65,6 +65,26 @@ export interface StudyPlan {
   description: string;
 }
 
+export interface AcademicTask {
+  _id: string;
+  title: string;
+  course: string;
+  dueDate?: string;
+  completed: boolean;
+  priority: "low" | "medium" | "high";
+}
+
+export interface AcademicResource {
+  id: string;
+  program: string;
+  title: string;
+  subject: string;
+  university: string;
+  type: string;
+  size: string;
+  url: string;
+}
+
 // ─── Opportunity Types ───────────────────────────────────
 export interface Scholarship {
   id: number;
@@ -88,6 +108,38 @@ export interface InterviewQuestion {
   category: string;
   question: string;
   difficulty: string;
+}
+
+export interface InterviewAttempt {
+  _id?: string;
+  mode: "coding" | "behavioral" | "mock";
+  problemId?: string;
+  title: string;
+  category: string;
+  score: number;
+  language?: string;
+  difficulty?: string;
+  feedback: string;
+  strengths?: string[];
+  improvements?: string[];
+  answerSnippet?: string;
+  createdAt: string;
+}
+
+export interface InterviewMock {
+  _id?: string;
+  mentorName: string;
+  company: string;
+  scheduledAt: string;
+  status: "scheduled" | "completed" | "cancelled";
+}
+
+export interface InterviewPost {
+  _id?: string;
+  authorName: string;
+  text: string;
+  helpfulCount: number;
+  createdAt: string;
 }
 
 export interface InternshipApplication {

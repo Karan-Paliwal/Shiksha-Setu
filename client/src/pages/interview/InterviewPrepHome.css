@@ -132,3 +132,14 @@
   bottom: 2px;
   right: 2px;
 }
+
+.ip-question-list {
+  max-height: 620px;
+  overflow-y: auto;
+}
+
+.ip-answer-box {
+  min-height: 280px;
+  resize: vertical;
+  line-height: 1.55;
+}

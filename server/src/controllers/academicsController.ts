@@ -15,6 +15,60 @@ export const calculateCGPA = (req: Request, res: Response): void => {
   res.json(result);
 };
 
+export const getDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const dashboard = await academicsService.getDashboard(req.userId!);
+    res.status(200).json(dashboard);
+  } catch (error: any) {
+    console.error("Get Academics Dashboard Error:", error.message);
+    res.status(500).json({ error: "Server error loading academic dashboard" });
+  }
+};
+
+export const createTask = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const task = await academicsService.createTask(req.userId!, req.body);
+    res.status(201).json(task);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "Unable to create task" });
+  }
+};
+
+export const updateTask = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const task = await academicsService.updateTask(req.userId!, req.params.id, req.body);
+    if (!task) {
+      res.status(404).json({ error: "Task not found" });
+      return;
+    }
+    res.status(200).json(task);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "Unable to update task" });
+  }
+};
+
+export const deleteTask = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const task = await academicsService.deleteTask(req.userId!, req.params.id);
+    if (!task) {
+      res.status(404).json({ error: "Task not found" });
+      return;
+    }
+    res.status(200).json({ message: "Task deleted" });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "Unable to delete task" });
+  }
+};
+
+export const createStudyPlan = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const studyPlan = await academicsService.createStudyPlan(req.userId!, req.body);
+    res.status(201).json(studyPlan);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "Unable to create study plan" });
+  }
+};
+
 // No fallback/estimated GPAs — only real AI-extracted data is stored
 
 export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<void> => {

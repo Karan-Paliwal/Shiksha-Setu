@@ -1,300 +1,426 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { InterviewAttempt, InterviewMock, InterviewPost } from "../../types";
+import {
+  createInterviewPost,
+  getInterviewDashboard,
+  markInterviewPostHelpful,
+  recordInterviewAttempt,
+  scheduleMockInterview,
+  searchInterviewQuestions,
+  updateMockInterview,
+} from "../../services/interviewService";
 import "./InterviewPrepHome.css";
 
+interface InterviewQuestionItem {
+  id: string;
+  type: "coding" | "behavioral";
+  title: string;
+  difficulty: string;
+  category: string;
+  prompt: string;
+  starterCode?: string;
+  hints?: string[];
+  tip?: string;
+}
+
+interface PrepResource {
+  title: string;
+  type: string;
+  category: string;
+  url: string;
+}
+
+interface InterviewDashboard {
+  userName: string;
+  problemOfTheDay: InterviewQuestionItem;
+  questionBank: InterviewQuestionItem[];
+  categories: string[];
+  resources: PrepResource[];
+  attempts: InterviewAttempt[];
+  mocks: InterviewMock[];
+  posts: InterviewPost[];
+  skills: {
+    technicalAccuracy: number;
+    communication: number;
+    problemSolving: number;
+  };
+}
+
+const formatWhen = (date: string) => new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  hour: "numeric",
+  minute: "2-digit",
+}).format(new Date(date));
+
 const InterviewPrepHome: React.FC = () => {
+  const [dashboard, setDashboard] = useState<InterviewDashboard | null>(null);
+  const [questions, setQuestions] = useState<InterviewQuestionItem[]>([]);
+  const [selectedQuestionId, setSelectedQuestionId] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [language, setLanguage] = useState("JavaScript");
+  const [query, setQuery] = useState("");
+  const [difficulty, setDifficulty] = useState("All");
+  const [category, setCategory] = useState("All");
+  const [type, setType] = useState("All");
+  const [postText, setPostText] = useState("");
+  const [mentorName, setMentorName] = useState("");
+  const [company, setCompany] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [lastAttempt, setLastAttempt] = useState<InterviewAttempt | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadDashboard = async () => {
+    try {
+      setError("");
+      const data = await getInterviewDashboard();
+      setDashboard(data);
+      setQuestions(data.questionBank);
+      setSelectedQuestionId(data.problemOfTheDay.id);
+      setAnswer(data.problemOfTheDay.starterCode || "");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Unable to load interview prep data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const selectedQuestion = useMemo(
+    () => questions.find((question) => question.id === selectedQuestionId) || dashboard?.problemOfTheDay,
+    [dashboard, questions, selectedQuestionId]
+  );
+
+  const handleSelectQuestion = (questionId: string) => {
+    const nextQuestion = questions.find((question) => question.id === questionId);
+    setSelectedQuestionId(questionId);
+    setLastAttempt(null);
+    setAnswer(nextQuestion?.type === "coding" ? nextQuestion.starterCode || "" : "");
+  };
+
+  const handleSearch = async () => {
+    const response = await searchInterviewQuestions({ q: query, difficulty, category, type });
+    setQuestions(response.questions);
+    if (response.questions.length && !response.questions.some((question: InterviewQuestionItem) => question.id === selectedQuestionId)) {
+      handleSelectQuestion(response.questions[0].id);
+    }
+  };
+
+  const handleSubmitAttempt = async () => {
+    if (!selectedQuestion) return;
+
+    try {
+      setSubmitting(true);
+      setError("");
+      const result = await recordInterviewAttempt({
+        problemId: selectedQuestion.id,
+        mode: selectedQuestion.type,
+        answer,
+        language,
+      });
+
+      setLastAttempt(result.attempt);
+      setDashboard((current) => current ? {
+        ...current,
+        attempts: [result.attempt, ...current.attempts].slice(0, 8),
+        skills: result.skills,
+      } : current);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Unable to submit attempt.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleScheduleMock = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!scheduledAt) return;
+
+    const mock = await scheduleMockInterview({
+      mentorName: mentorName || "Assigned Mentor",
+      company: company || "Mentor Network",
+      scheduledAt,
+    });
+
+    setDashboard((current) => current ? { ...current, mocks: [...current.mocks, mock].slice(-8) } : current);
+    setMentorName("");
+    setCompany("");
+    setScheduledAt("");
+  };
+
+  const handleUpdateMock = async (mock: InterviewMock, status: "completed" | "cancelled") => {
+    if (!mock._id) return;
+    const updated = await updateMockInterview(mock._id, status);
+    setDashboard((current) => current ? {
+      ...current,
+      mocks: current.mocks.map((item) => (item._id === updated._id ? updated : item)),
+    } : current);
+  };
+
+  const handleCreatePost = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!postText.trim()) return;
+
+    const post = await createInterviewPost(postText);
+    setDashboard((current) => current ? { ...current, posts: [post, ...current.posts].slice(0, 6) } : current);
+    setPostText("");
+  };
+
+  const handleHelpful = async (post: InterviewPost) => {
+    if (!post._id) return;
+    const updated = await markInterviewPostHelpful(post._id);
+    setDashboard((current) => current ? {
+      ...current,
+      posts: current.posts.map((item) => (item._id === updated._id ? updated : item)),
+    } : current);
+  };
+
+  if (loading) {
+    return <div className="fade-in pb-5 text-secondary">Loading interview prep...</div>;
+  }
+
   return (
-    <div className="fade-in pb-5 ip-textarea">
+    <div className="fade-in pb-5">
+      <div className="d-flex justify-content-between align-items-start mb-4">
+        <div>
+          <h1 className="fw-bold text-dark mb-2 ip-title">Interview Prep</h1>
+          <p className="text-secondary fs-6 mb-0 ip-subtitle">
+            Practice real questions, submit answers for feedback, schedule mocks, and track readiness.
+          </p>
+        </div>
+        <button className="btn btn-primary d-flex align-items-center gap-2 fw-medium shadow-sm" onClick={handleSubmitAttempt} disabled={submitting}>
+          <i className="bi bi-send"></i>{submitting ? "Reviewing..." : "Submit Answer"}
+        </button>
+      </div>
+
+      {error && <div className="alert alert-danger">{error}</div>}
+
       <div className="row g-4">
-        {/* Main Content Area (Left) */}
-        <div className="col-lg-8 pe-lg-4">
-          
-          {/* Header */}
-          <div className="d-flex justify-content-between align-items-start mb-4">
-            <div>
-              <h1 className="fw-bold text-dark mb-2 ip-title">Interview Mastery Destination</h1>
-              <p className="text-secondary fs-6 mb-0 ip-subtitle">
-                Practice coding, polish behavioral responses, and schedule mock sessions with industry mentors.
-              </p>
-            </div>
-            <div className="d-flex gap-2">
-              <button className="btn btn-light border d-flex align-items-center gap-2 fw-medium shadow-sm">
-                <i className="bi bi-calendar"></i> Schedule Mock
-              </button>
-              <button className="btn btn-primary d-flex align-items-center gap-2 fw-medium shadow-sm">
-                <i className="bi bi-stars"></i> Start Practice
-              </button>
-            </div>
-          </div>
-
-          {/* Cards Row */}
-          <div className="row g-4 mb-5">
-            {/* AI Mock Interview */}
-            <div className="col-md-6">
-              <div className="card border-0 shadow-sm rounded-4 h-100 p-4 ip-bg-light">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div className="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center ip-icon-sm">
-                    <i className="bi bi-play-fill fs-4"></i>
-                  </div>
-                  <h5 className="fw-bold mb-0">AI Mock Interview</h5>
-                </div>
-                <p className="text-secondary mb-4 flex-grow-1 ip-text-base">
-                  Instant feedback on your technical and behavioral skills using our AI interviewer.
-                </p>
-                <button className="btn btn-primary w-100 fw-medium">Start AI Session</button>
-              </div>
-            </div>
-
-            {/* Live Mentor Mock */}
-            <div className="col-md-6">
-              <div className="card border shadow-sm rounded-4 h-100 p-4">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div className="bg-light text-dark border rounded-3 d-flex align-items-center justify-content-center ip-icon-sm">
-                    <i className="bi bi-calendar-check fs-5"></i>
-                  </div>
-                  <h5 className="fw-bold mb-0">Live Mentor Mock</h5>
-                </div>
-                <p className="text-secondary mb-4 flex-grow-1 ip-text-base">
-                  Get real-world experience with senior engineers from top tech companies.
-                </p>
-                <button className="btn btn-light border w-100 fw-medium">Book a Mentor</button>
-              </div>
-            </div>
-          </div>
-
-          {/* Coding Practice Section */}
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="fw-bold mb-0">Coding Practice</h5>
-            <div className="d-flex gap-2 align-items-center">
-               <select className="form-select form-select-sm border bg-light text-muted rounded-2 ip-select"><option>Language</option></select>
-               <select className="form-select form-select-sm border bg-light text-muted rounded-2 ip-select"><option>Difficulty</option></select>
-               <button className="btn btn-primary btn-sm px-3 d-flex align-items-center gap-2 fw-medium rounded-2"><i className="bi bi-play-fill"></i> Run Code</button>
-            </div>
-          </div>
-
-          <div className="card border shadow-sm rounded-4 mb-5 overflow-hidden">
-            <div className="row g-0 h-100">
-              {/* Problem Statement */}
-              <div className="col-md-5 p-4 border-end bg-white">
-                <span className="badge bg-primary bg-opacity-10 text-primary rounded-pill mb-3 px-3 py-2 fw-semibold border border-primary border-opacity-25">Problem of the Day</span>
-                <h5 className="fw-bold text-dark mb-3">Validate Binary Search Tree</h5>
-                <p className="text-secondary mb-4 ip-text-body">
-                  Given the root of a binary tree, determine if it is a valid binary search tree (BST). A valid BST is defined as follows: The left subtree of a node contains only nodes with keys less than the node's key...
-                </p>
-                <a href="#" className="text-primary text-decoration-none fw-medium ip-text-base">View Full Description <i className="bi bi-box-arrow-up-right ms-1"></i></a>
-              </div>
-              {/* Code Editor */}
-              <div className="col-md-7 bg-dark text-light p-0 position-relative d-flex flex-column">
-                <div className="px-4 py-2 border-bottom border-secondary d-flex align-items-center ip-editor-header">
-                  <i className="bi bi-code-slash text-secondary me-2"></i>
-                  <span className="text-secondary ip-text-sm">solution.js</span>
-                </div>
-                <div className="p-4 font-monospace flex-grow-1 ip-editor-body">
-                  <div><span className="ip-code-keyword">function</span> <span className="ip-code-function">isValidBST</span>(<span className="ip-code-var">root</span>) {'{'}</div>
-                  <div className="ms-4"><span className="ip-code-keyword">return</span> <span className="ip-code-bool">true</span>;</div>
-                  <div>{'}'}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Behavioral Questions & Question Bank Row */}
-          <div className="row g-4 mb-5">
-            <div className="col-md-6">
-              <h5 className="fw-bold mb-1">Behavioral Questions</h5>
-              <p className="text-secondary mb-3 ip-text-sm">Use the STAR method for soft skills</p>
-              
-              <div className="card border shadow-sm rounded-4 p-3 mb-3 hover-shadow cursor-pointer transition">
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div className="fw-bold text-dark mb-1 fs-6">Tell me about a time you failed.</div>
-                    <div className="text-secondary ip-text-xs">Tip: Focus on what you learned and how you grew.</div>
-                  </div>
-                  <i className="bi bi-check-circle text-muted fs-5"></i>
-                </div>
-              </div>
-
-              <div className="card border shadow-sm rounded-4 p-3 hover-shadow cursor-pointer transition">
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div className="fw-bold text-dark mb-1 fs-6">How do you handle conflict in a team?</div>
-                    <div className="text-secondary ip-text-xs">Tip: Emphasize empathy and resolution-oriented communication.</div>
-                  </div>
-                  <i className="bi bi-check-circle text-muted fs-5"></i>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <h5 className="fw-bold mb-1">Question Bank</h5>
-              <p className="text-secondary mb-3 ip-text-sm">Search 500+ technical topics</p>
-              
-              <div className="card border shadow-sm rounded-4 p-4 h-100 d-flex flex-column">
-                <div className="d-flex gap-2 mb-4">
-                  <div className="position-relative flex-grow-1">
+        <div className="col-lg-8">
+          <div className="card border shadow-sm rounded-4 mb-4 overflow-hidden">
+            <div className="p-4 border-bottom">
+              <div className="row g-2 align-items-center">
+                <div className="col-md-4">
+                  <div className="position-relative">
                     <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                    <input type="text" className="form-control rounded-pill ps-5 bg-white border" placeholder="Search topics..." />
+                    <input className="form-control ps-5" placeholder="Search questions" value={query} onChange={(event) => setQuery(event.target.value)} />
                   </div>
-                  <button className="btn btn-light border rounded-pill px-3 shadow-sm"><i className="bi bi-funnel"></i></button>
                 </div>
-
-                <div className="d-flex flex-wrap gap-2 mb-4">
-                  <span className="badge bg-light border text-dark rounded-pill px-3 py-2 fw-normal">System Design</span>
-                  <span className="badge bg-light border text-dark rounded-pill px-3 py-2 fw-normal">React</span>
-                  <span className="badge bg-light border text-dark rounded-pill px-3 py-2 fw-normal">Algorithms</span>
-                  <span className="badge bg-light border text-dark rounded-pill px-3 py-2 fw-normal">SQL</span>
-                  <span className="badge bg-light border text-dark rounded-pill px-3 py-2 fw-normal">Security</span>
+                <div className="col-md-2">
+                  <select className="form-select" value={type} onChange={(event) => setType(event.target.value)}>
+                    <option>All</option>
+                    <option value="coding">Coding</option>
+                    <option value="behavioral">Behavioral</option>
+                  </select>
                 </div>
-
-                <button className="btn btn-light border w-100 rounded-pill fw-medium text-secondary mt-auto shadow-sm">Explore Full Bank</button>
-              </div>
-            </div>
-          </div>
-
-          {/* Interview Prep Resources */}
-          <h5 className="fw-bold mb-1">Interview Prep Resources</h5>
-          <p className="text-secondary mb-3 ip-text-sm">Curated articles, videos, and cheatsheets</p>
-          
-          <div className="d-flex gap-3 overflow-auto pb-4 mb-4 no-scrollbar ip-scroll-container">
-            <div className="card border shadow-sm rounded-4 p-3 d-flex flex-row align-items-center gap-3 flex-shrink-0 cursor-pointer hover-shadow transition ip-scroll-item">
-              <div className="bg-light border rounded p-2 text-dark"><i className="bi bi-book fs-5"></i></div>
-              <div className="fw-bold text-dark ip-text-base">The Ultimate System Design Primer</div>
-              <i className="bi bi-arrow-up-right ms-auto text-muted ip-text-xs"></i>
-            </div>
-            <div className="card border shadow-sm rounded-4 p-3 d-flex flex-row align-items-center gap-3 flex-shrink-0 cursor-pointer hover-shadow transition ip-scroll-item">
-              <div className="bg-danger bg-opacity-10 text-danger rounded p-2 border border-danger border-opacity-25"><i className="bi bi-play-btn fs-5"></i></div>
-              <div className="fw-bold text-dark ip-text-base">React Performance Optimization</div>
-              <i className="bi bi-arrow-up-right ms-auto text-muted ip-text-xs"></i>
-            </div>
-            <div className="card border shadow-sm rounded-4 p-3 d-flex flex-row align-items-center gap-3 flex-shrink-0 cursor-pointer hover-shadow transition ip-scroll-item">
-              <div className="bg-light border rounded p-2 text-dark"><i className="bi bi-file-earmark-text fs-5"></i></div>
-              <div className="fw-bold text-dark ip-text-base">Big O Notation Cheatsheet</div>
-              <i className="bi bi-arrow-up-right ms-auto text-muted ip-text-xs"></i>
-            </div>
-          </div>
-
-          {/* Community Insights */}
-          <h5 className="fw-bold mb-3">Community Insights</h5>
-          <div className="card border shadow-sm rounded-4 p-4 mb-4">
-            <div className="d-flex gap-3 mb-4">
-              <img src="https://ui-avatars.com/api/?name=User&background=random" alt="User" className="rounded-circle shadow-sm ip-avatar-md" />
-              <div className="flex-grow-1 position-relative">
-                <textarea className="form-control bg-light border-0 rounded-4 p-3 shadow-sm" rows={3} placeholder="Share a challenge or tip with fellow architects..." ></textarea>
-                <div className="position-absolute bottom-0 end-0 p-2">
-                  <button className="btn btn-primary btn-sm px-4 rounded-pill fw-medium shadow-sm">Post Insight</button>
+                <div className="col-md-2">
+                  <select className="form-select" value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
+                    <option>All</option>
+                    <option>Easy</option>
+                    <option>Medium</option>
+                    <option>Hard</option>
+                  </select>
+                </div>
+                <div className="col-md-3">
+                  <select className="form-select" value={category} onChange={(event) => setCategory(event.target.value)}>
+                    <option>All</option>
+                    {dashboard?.categories.map((item) => <option key={item}>{item}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-1 d-grid">
+                  <button className="btn btn-light border" onClick={handleSearch} aria-label="Apply filters"><i className="bi bi-funnel"></i></button>
                 </div>
               </div>
             </div>
 
-            <div className="d-flex gap-3 pt-4 border-top">
-              <img src="https://ui-avatars.com/api/?name=Elena+Vance&background=ffedd5&color=ea580c" alt="Elena" className="rounded-circle shadow-sm ip-avatar-md" />
-              <div>
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <span className="fw-bold text-dark fs-6">Elena Vance</span>
-                  <span className="badge bg-light border text-dark fw-medium rounded-pill px-2 ip-badge-text">Module 4 Expert</span>
-                  <span className="text-muted ip-time-text">• 2h ago</span>
+            <div className="row g-0">
+              <div className="col-md-4 border-end bg-light ip-question-list">
+                {questions.map((question) => (
+                  <button
+                    className={`btn text-start w-100 rounded-0 p-3 border-bottom ${selectedQuestionId === question.id ? "bg-white" : ""}`}
+                    key={question.id}
+                    onClick={() => handleSelectQuestion(question.id)}
+                  >
+                    <div className="fw-bold text-dark ip-text-base">{question.title}</div>
+                    <div className="text-secondary ip-text-xs">{question.category} | {question.difficulty} | {question.type}</div>
+                  </button>
+                ))}
+                {!questions.length && <div className="p-4 text-secondary ip-text-sm">No matching questions found.</div>}
+              </div>
+
+              <div className="col-md-8">
+                <div className="p-4 border-bottom bg-white">
+                  <span className="badge bg-primary bg-opacity-10 text-primary rounded-pill mb-3 px-3 py-2 fw-semibold border border-primary border-opacity-25">
+                    {selectedQuestion?.difficulty} | {selectedQuestion?.category}
+                  </span>
+                  <h5 className="fw-bold text-dark mb-2">{selectedQuestion?.title}</h5>
+                  <p className="text-secondary mb-3 ip-text-body">{selectedQuestion?.prompt}</p>
+                  <div className="d-flex flex-wrap gap-2">
+                    {selectedQuestion?.hints?.map((hint) => (
+                      <span className="badge bg-light border text-dark fw-normal" key={hint}>{hint}</span>
+                    ))}
+                    {selectedQuestion?.tip && <span className="badge bg-light border text-dark fw-normal">{selectedQuestion.tip}</span>}
+                  </div>
                 </div>
-                <p className="text-dark mb-3 ip-comment-text">
-                  For those stuck on the DynamoDB lock: ensure your IAM policy has 'dynamodb:PutItem' permissions. It's a common oversight in the lab guide!
-                </p>
-                <div className="d-flex gap-4">
-                  <span className="text-primary fw-medium cursor-pointer d-flex align-items-center gap-1 ip-text-sm"><i className="bi bi-hand-thumbs-up"></i> Helpful (12)</span>
-                  <span className="text-muted fw-medium cursor-pointer d-flex align-items-center gap-1 ip-text-sm"><i className="bi bi-reply"></i> Reply</span>
+
+                <div className="p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <label className="fw-bold text-dark">Your Answer</label>
+                    {selectedQuestion?.type === "coding" && (
+                      <select className="form-select form-select-sm ip-select" value={language} onChange={(event) => setLanguage(event.target.value)}>
+                        <option>JavaScript</option>
+                        <option>Python</option>
+                        <option>Java</option>
+                        <option>SQL</option>
+                      </select>
+                    )}
+                  </div>
+                  <textarea
+                    className="form-control font-monospace ip-answer-box"
+                    value={answer}
+                    onChange={(event) => setAnswer(event.target.value)}
+                    placeholder={selectedQuestion?.type === "coding" ? "Write your solution or design approach..." : "Write your STAR answer..."}
+                  />
+                  <button className="btn btn-primary mt-3 fw-medium" onClick={handleSubmitAttempt} disabled={submitting}>
+                    <i className="bi bi-send me-2"></i>{submitting ? "Reviewing..." : "Submit for Feedback"}
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-          
+
+          {lastAttempt && (
+            <div className="card border shadow-sm rounded-4 p-4 mb-4">
+              <div className="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h5 className="fw-bold text-dark mb-1">Latest Feedback</h5>
+                  <p className="text-secondary mb-0 ip-text-sm">{lastAttempt.feedback}</p>
+                </div>
+                <span className="badge bg-primary rounded-pill fs-6 px-3 py-2">{lastAttempt.score}%</span>
+              </div>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <div className="fw-bold text-dark mb-2">Strengths</div>
+                  {(lastAttempt.strengths || []).map((item) => <div className="text-secondary ip-text-sm mb-1" key={item}><i className="bi bi-check-circle text-success me-2"></i>{item}</div>)}
+                </div>
+                <div className="col-md-6">
+                  <div className="fw-bold text-dark mb-2">Improve Next</div>
+                  {(lastAttempt.improvements || []).map((item) => <div className="text-secondary ip-text-sm mb-1" key={item}><i className="bi bi-arrow-up-circle text-primary me-2"></i>{item}</div>)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="row g-4">
+            <div className="col-md-6">
+              <h5 className="fw-bold mb-3">Resources</h5>
+              <div className="card border shadow-sm rounded-4 p-4 d-flex flex-column gap-3">
+                {dashboard?.resources.map((resource) => (
+                  <a className="d-flex align-items-center gap-3 text-decoration-none" href={resource.url} target="_blank" rel="noreferrer" key={resource.title}>
+                    <div className="bg-light border rounded p-2 text-dark"><i className="bi bi-box-arrow-up-right fs-5"></i></div>
+                    <div>
+                      <div className="fw-bold text-dark ip-text-base">{resource.title}</div>
+                      <div className="text-secondary ip-text-xs">{resource.category} | {resource.type}</div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div className="col-md-6">
+              <h5 className="fw-bold mb-3">Community Insights</h5>
+              <div className="card border shadow-sm rounded-4 p-4">
+                <form onSubmit={handleCreatePost} className="mb-3">
+                  <textarea className="form-control bg-light border-0 rounded-4 p-3 shadow-sm mb-2" rows={3} placeholder="Share a useful interview tip..." value={postText} onChange={(event) => setPostText(event.target.value)} />
+                  <button className="btn btn-primary btn-sm px-4 rounded-pill fw-medium shadow-sm" type="submit">Post</button>
+                </form>
+                {dashboard?.posts.map((post) => (
+                  <div className="pt-3 border-top" key={post._id || `${post.authorName}-${post.createdAt}`}>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="fw-bold text-dark ip-text-base">{post.authorName}</span>
+                      <span className="text-muted ip-time-text">{formatWhen(post.createdAt)}</span>
+                    </div>
+                    <p className="text-dark mb-2 ip-comment-text">{post.text}</p>
+                    <button className="btn btn-link p-0 text-primary fw-medium ip-text-sm" onClick={() => handleHelpful(post)}>
+                      <i className="bi bi-hand-thumbs-up me-1"></i>Helpful ({post.helpfulCount})
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Right Sidebar (col-lg-4) */}
         <div className="col-lg-4">
-          
-          {/* Recent Attempts */}
+          <div className="card border shadow-sm rounded-4 p-4 mb-4">
+            <h6 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+              <i className="bi bi-lightning-charge text-primary fs-5"></i> Readiness
+            </h6>
+            {[
+              ["Technical Accuracy", dashboard?.skills.technicalAccuracy || 0],
+              ["Communication", dashboard?.skills.communication || 0],
+              ["Problem Solving", dashboard?.skills.problemSolving || 0],
+            ].map(([label, value]) => (
+              <div className="mb-4" key={label}>
+                <div className="d-flex justify-content-between align-items-center mb-1">
+                  <span className="fw-bold text-dark ip-text-sm">{label}</span>
+                  <span className="fw-bold text-dark ip-text-sm">{value}%</span>
+                </div>
+                <div className="progress rounded-pill bg-light ip-progress-bg">
+                  <div className="progress-bar bg-primary" style={{ width: `${value}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <div className="card border shadow-sm rounded-4 p-4 mb-4">
             <h6 className="fw-bold text-dark mb-4">Recent Attempts</h6>
-            
-            <div className="mb-4">
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <span className="fw-bold text-dark ip-text-base">Linked List Reversal</span>
-                <span className="fw-bold text-dark">95%</span>
+            {dashboard?.attempts.map((attempt) => (
+              <div className="mb-4" key={attempt._id || `${attempt.title}-${attempt.createdAt}`}>
+                <div className="d-flex justify-content-between align-items-center mb-1">
+                  <span className="fw-bold text-dark ip-text-base">{attempt.title}</span>
+                  <span className="fw-bold text-dark">{attempt.score}%</span>
+                </div>
+                <div className="text-muted mb-2 ip-time-text">{attempt.mode} | {formatWhen(attempt.createdAt)}</div>
+                <div className="progress rounded-pill bg-light ip-progress-bg">
+                  <div className="progress-bar bg-primary" style={{ width: `${attempt.score}%` }}></div>
+                </div>
               </div>
-              <div className="text-muted mb-2 ip-time-text">2h ago</div>
-              <div className="progress rounded-pill bg-light ip-progress-bg">
-                <div className="progress-bar bg-primary ip-w-95"></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <span className="fw-bold text-dark ip-text-base">System Design: Uber</span>
-                <span className="fw-bold text-dark">82%</span>
-              </div>
-              <div className="text-muted mb-2 ip-time-text">Yesterday</div>
-              <div className="progress rounded-pill bg-light ip-progress-bg">
-                <div className="progress-bar bg-primary ip-w-82"></div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Interview Skills */}
-          <div className="card border shadow-sm rounded-4 p-4 mb-4">
+          <div className="card border shadow-sm rounded-4 p-4">
             <h6 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
-              <i className="bi bi-lightning-charge text-primary fs-5"></i> Interview Skills
+              <i className="bi bi-calendar2-event text-primary fs-5"></i> Mock Interviews
             </h6>
-            
-            <div className="mb-4">
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <span className="fw-bold text-dark ip-text-sm">Technical Accuracy</span>
-                <span className="fw-bold text-dark ip-text-sm">88%</span>
-              </div>
-              <div className="progress rounded-pill bg-light ip-progress-bg">
-                <div className="progress-bar bg-primary ip-w-88"></div>
-              </div>
-            </div>
+            <form onSubmit={handleScheduleMock} className="mb-4">
+              <input className="form-control mb-2" placeholder="Mentor name" value={mentorName} onChange={(event) => setMentorName(event.target.value)} />
+              <input className="form-control mb-2" placeholder="Company / role" value={company} onChange={(event) => setCompany(event.target.value)} />
+              <input className="form-control mb-3" type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} />
+              <button className="btn btn-light border w-100 fw-medium" type="submit">Schedule Mock</button>
+            </form>
 
-            <div>
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <span className="fw-bold text-dark ip-text-sm">Communication</span>
-                <span className="fw-bold text-dark ip-text-sm">65%</span>
+            {dashboard?.mocks.length ? dashboard.mocks.map((mock) => (
+              <div className="position-relative border-start border-2 border-primary ms-2 ps-3 mb-4 py-1" key={mock._id || `${mock.mentorName}-${mock.scheduledAt}`}>
+                <div className="position-absolute rounded-circle bg-primary ip-timeline-dot"></div>
+                <div className="fw-bold text-dark fs-6 mb-1">{mock.mentorName}</div>
+                <div className="text-secondary ip-text-xs mb-2">{mock.company} | {formatWhen(mock.scheduledAt)} | {mock.status}</div>
+                {mock.status === "scheduled" && (
+                  <div className="d-flex gap-2">
+                    <button className="btn btn-sm btn-outline-primary rounded-pill" onClick={() => handleUpdateMock(mock, "completed")}>Complete</button>
+                    <button className="btn btn-sm btn-outline-danger rounded-pill" onClick={() => handleUpdateMock(mock, "cancelled")}>Cancel</button>
+                  </div>
+                )}
               </div>
-              <div className="progress rounded-pill bg-light ip-progress-bg">
-                <div className="progress-bar bg-primary ip-w-65"></div>
-              </div>
-            </div>
+            )) : (
+              <p className="text-secondary ip-text-sm">No mocks booked yet.</p>
+            )}
           </div>
-
-          {/* Upcoming Mocks */}
-          <div className="card border shadow-sm rounded-4 p-4 mb-4">
-            <h6 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
-              <i className="bi bi-calendar2-event text-primary fs-5"></i> Upcoming Mocks
-            </h6>
-            
-            <div className="position-relative border-start border-2 border-primary ms-2 ps-3 mb-4 py-1">
-              <div className="position-absolute rounded-circle bg-primary ip-timeline-dot"></div>
-              <div className="fw-bold text-dark fs-6 mb-1">Sarah D. (Google)</div>
-              <div className="text-secondary ip-text-xs">Tomorrow, 10:00 AM</div>
-            </div>
-
-            <div className="position-relative border-start border-2 border-light ms-2 ps-3 mb-4 py-1">
-              <div className="position-absolute rounded-circle bg-primary ip-timeline-dot"></div>
-              <div className="fw-bold text-dark fs-6 mb-1">James L. (Meta)</div>
-              <div className="text-secondary ip-text-xs">Fri, 2:00 PM</div>
-            </div>
-
-            <button className="btn btn-light border w-100 fw-medium text-secondary rounded-pill shadow-sm">View All</button>
-          </div>
-
-          {/* Mentor Support */}
-          <div className="card border shadow-sm rounded-4 p-4 text-center d-flex flex-column align-items-center">
-            <div className="position-relative mb-3">
-              <img src="https://ui-avatars.com/api/?name=Mentor&background=e2e8f0" alt="Mentor" className="rounded-circle shadow-sm ip-avatar-lg" />
-              <div className="position-absolute bg-success rounded-circle border border-white border-2 ip-status-dot"></div>
-            </div>
-            <h6 className="fw-bold text-dark mb-1 fs-5">Mentor Support</h6>
-            <div className="text-secondary mb-4 ip-text-sm">Available Now</div>
-            <button className="btn btn-primary w-100 fw-medium rounded-pill shadow-sm">Chat with Mentor</button>
-          </div>
-
         </div>
       </div>
     </div>

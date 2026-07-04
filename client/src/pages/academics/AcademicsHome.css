@@ -34,3 +34,7 @@
 .ah-text-sm {
   font-size: 0.85rem;
 }
+
+.ah-program-select {
+  width: 220px;
+}
