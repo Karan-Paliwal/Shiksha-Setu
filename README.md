@@ -242,3 +242,23 @@ This scaffold has been modularized so that each team member can work independent
 **4. Khushbu (Feature Content & Supporting Modules)**
 - Focus: Managing the datasets, documentation, and ensuring the application has rich, realistic data.
 - AI Prompt Idea: *"Help me expand `mockData.ts` and `seedData.ts` with 20 realistic government schemes and scholarships for college students."*
+
+---
+
+## 🔄 Recent Updates & Changes
+
+The following features and improvements have been recently added to the platform:
+
+1. **AI-Powered Marksheet Processing Implementation**: 
+   - Integrated Google Gemini AI for automatic marksheet scanning and SGPA extraction.
+   - Added robust backend services (`aiScannerService.ts`, `aiService.ts`) and AI routes.
+2. **Enhanced Technical Interview Prep**: 
+   - Created a dedicated AI Mock Interview module (`AIMockInterview.tsx`).
+   - Improved the Interview Prep Hub routing and UI components.
+3. **Dashboard & UI Refinements**: 
+   - Refined Dashboard UI Navigation for better user experience.
+   - Reorganized content: Moved the "Top Internship Alerts" widget directly to the Dashboard.
+   - Updated detailed analytics views (`DetailedAnalytics.tsx`).
+4. **Profile & Academic Data Enhancements**: 
+   - Updated the `User` model and `profileService.ts` for expanded user data tracking.
+   - Enhanced `profileController` and `academicsController` to serve the new profile and academic metrics.
