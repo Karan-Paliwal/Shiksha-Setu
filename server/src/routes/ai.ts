@@ -14,4 +14,9 @@ router.get("/sessions", authMiddleware, aiController.getSessions);
 router.post("/sessions/save", authMiddleware, aiController.saveSession);
 router.delete("/sessions/:id", authMiddleware, aiController.deleteSession);
 
+// Mock Interview Endpoints
+router.post("/mock/start", authMiddleware, aiController.startMock);
+router.post("/mock/chat", authMiddleware, aiController.chatMock);
+router.post("/mock/finish", authMiddleware, aiController.finishMock);
+
 export default router;

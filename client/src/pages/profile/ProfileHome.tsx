@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./ProfileHome.css";
 import { useAuth } from "../../hooks/useAuth";
-import { getProfile, saveProfile } from "../../services/profileService";
+import { getProfile, saveProfile, clearMarksheets } from "../../services/profileService";
+import api from "../../services/api";
 
 const ProfileHome: React.FC = () => {
   const { user, updateUser } = useAuth();
@@ -19,6 +20,12 @@ const ProfileHome: React.FC = () => {
 
   const [progress, setProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+
+  // AI Marksheet Upload/Scanning State
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState("");
+  const [analysisProgress, setAnalysisProgress] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -90,13 +97,80 @@ const ProfileHome: React.FC = () => {
     }
   };
 
-  const handleMarksheetChange = (e: React.ChangeEvent<HTMLInputElement>, semIndex: number) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData({
-        ...formData,
-        marksheets: { ...formData.marksheets, [semIndex]: e.target.files[0] }
-      });
-    }
+  const handleMarksheetChange = async (e: React.ChangeEvent<HTMLInputElement>, semIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Locally set file immediately
+    setFormData(prev => ({
+      ...prev,
+      marksheets: { ...prev.marksheets, [semIndex]: file }
+    }));
+
+    // Start real-time AI scanning
+    setIsAnalyzing(true);
+    setAnalysisProgress(0);
+    setAnalysisStep("Uploading marksheet to Cloudinary secure storage...");
+
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += (95 - currentProgress) * 0.15;
+      setAnalysisProgress(currentProgress);
+
+      if (currentProgress > 80) {
+         setAnalysisStep("Predictive Model: Computing degree CGPA projection...");
+      } else if (currentProgress > 50) {
+         setAnalysisStep("AI Analysis: Extracting semester-wise SGPAs and cumulative CGPA...");
+      } else if (currentProgress > 25) {
+         setAnalysisStep("AI Vision: Reading text, tables, and grade data from document...");
+      }
+    }, 500);
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64Data = reader.result as string;
+      try {
+        const response = await api.post("/academics/upload-marksheet", {
+          fileName: file.name,
+          fileType: file.type,
+          fileData: base64Data,
+          semester: semIndex
+        });
+
+        clearInterval(interval);
+        setAnalysisProgress(100);
+        setAnalysisStep("Finalizing: Saving AI-verified academic data to your profile...");
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // Update the marksheet URL from AI response so it shows as uploaded
+        if (response.data.cloudinaryUrl) {
+           setFormData(prev => ({
+             ...prev,
+             marksheets: { ...prev.marksheets, [semIndex]: { name: file.name, url: response.data.cloudinaryUrl } }
+           }));
+        }
+
+        if (response.data.user) {
+          updateUser(response.data.user);
+        }
+
+        alert(response.data.message || "Marksheet analyzed successfully.");
+      } catch (err: any) {
+        console.error(err);
+        alert(err.response?.data?.error || "Failed to analyze marksheet document.");
+      } finally {
+        setIsAnalyzing(false);
+        clearInterval(interval);
+      }
+    };
+
+    reader.onerror = () => {
+      alert("Error reading marksheet file.");
+      setIsAnalyzing(false);
+      clearInterval(interval);
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,8 +238,54 @@ const ProfileHome: React.FC = () => {
     }
   };
 
+  const handleClearMarksheets = async () => {
+    if (!window.confirm("Are you sure you want to delete all uploaded marksheets? This will also clear your analyzed academic data on the dashboard.")) {
+      return;
+    }
+    setIsClearing(true);
+    try {
+      const response = await clearMarksheets();
+      if (response && response.user) {
+        updateUser(response.user);
+      }
+      setFormData({
+        ...formData,
+        marksheets: {}
+      });
+      alert("All marksheets and academic data cleared successfully.");
+    } catch (err) {
+      console.error("Failed to clear marksheets", err);
+      alert("Error clearing marksheets.");
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   return (
-    <div className="fade-in pb-5">
+    <div className="fade-in pb-5 position-relative">
+      {/* AI Scanning Loader Overlay */}
+      {isAnalyzing && (
+        <div className="db-scanner-overlay" style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
+          backgroundColor: 'rgba(255, 255, 255, 0.9)', zIndex: 9999, 
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div className="spinner-border text-primary mb-4" role="status" style={{ width: "3.5rem", height: "3.5rem" }}>
+            <span className="visually-hidden">Scanning...</span>
+          </div>
+          <h4 className="fw-bold text-dark mb-2 db-pulse">AI is deeply analyzing your marksheet...</h4>
+          <p className="text-muted db-text-sm mb-4 text-center px-3" style={{ maxWidth: "450px" }}>
+            {analysisStep}
+          </p>
+          <div className="progress w-25" style={{ height: "6px" }}>
+            <div
+              className="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+              style={{ width: `${analysisProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
       {/* Header & Completion Bar */}
       <div className="d-flex justify-content-between align-items-end mb-4">
         <div>
@@ -368,6 +488,21 @@ const ProfileHome: React.FC = () => {
                   Please enter your current semester to upload marksheets.
                 </div>
               )}
+            </div>
+
+            {/* Clear Marksheets Button */}
+            <div className="mt-4 pt-3 border-top border-primary border-opacity-25">
+              <button 
+                className="btn btn-outline-danger w-100 fw-semibold d-flex align-items-center justify-content-center gap-2"
+                onClick={handleClearMarksheets}
+                disabled={isClearing || Object.keys(formData.marksheets).length === 0}
+              >
+                {isClearing ? (
+                  <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Clearing...</>
+                ) : (
+                  <><i className="bi bi-trash3-fill"></i> Clear All Marksheets</>
+                )}
+              </button>
             </div>
 
           </div>

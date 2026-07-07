@@ -74,7 +74,7 @@ export const createStudyPlan = async (req: AuthRequest, res: Response): Promise<
 export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.userId;
-    const { fileName, fileType, fileData } = req.body;
+    const { fileName, fileType, fileData, semester } = req.body;
 
     if (!fileName || !fileData) {
       res.status(400).json({ error: "File name and file data are required" });
@@ -87,24 +87,33 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    const semCount = user.academicProfile?.currentSemester || 5;
+    const currentSem = user.academicProfile?.currentSemester || 5;
+    const targetSem = semester ? Number(semester) : currentSem;
 
-    if (semCount <= 1) {
+    if (currentSem <= 1) {
       res.status(400).json({
         error: "Invalid action. You are currently in Semester 1, so there are no previous semester marksheets to upload."
       });
       return;
     }
 
+    if (targetSem >= currentSem && currentSem > 1) {
+       res.status(400).json({
+         error: `Invalid semester. You can only upload marksheets for previous semesters (1 to ${currentSem - 1}).`
+       });
+       return;
+    }
+
     // ─── Step 1: Upload base64 file to Cloudinary ──────────────────────────────
     console.log(`[Marksheet] Uploading "${fileName}" to Cloudinary...`);
     let cloudinaryUrl: string | null = null;
+    let targetSemForPublicId = targetSem;
 
     try {
       const uploadResult = await cloudinary.uploader.upload(fileData, {
         folder: "shikshasetu_marksheets",
         resource_type: "auto",
-        public_id: `marksheet_${userId}_sem${semCount}_${Date.now()}`,
+        public_id: `marksheet_${userId}_sem${targetSemForPublicId}_${Date.now()}`,
       });
       cloudinaryUrl = uploadResult.secure_url;
       console.log(`[Marksheet] Cloudinary upload success: ${cloudinaryUrl}`);
@@ -116,33 +125,38 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
     // ─── Step 2: Run AI Vision analysis on the Cloudinary URL ──
     // ─── Step 2: Run AI Vision analysis on the Cloudinary URL ──
     let semesterGpas: number[] = user.academicProfile?.semesterGpas || [];
+    let semesterCredits: number[] = user.academicProfile?.semesterCredits || [];
     let currentCgpa: number = user.academicProfile?.currentCgpa || 0;
     let creditsEarned: number = user.academicProfile?.creditsEarned || 0;
-    let subjects: { name: string; score: number }[] = user.academicProfile?.subjects || [];
+    let subjects: { semester?: number; name: string; score: number }[] = user.academicProfile?.subjects || [];
     let aiUsed = false;
-    let actualSem = semCount;
+    let actualSem = targetSem;
 
     if (cloudinaryUrl) {
-      console.log(`[Marksheet] Sending to Groq Vision AI for semester ${semCount} analysis...`);
-      const aiResult = await analyzeMarksheetWithAI(cloudinaryUrl, semCount);
+      console.log(`[Marksheet] Sending to Groq Vision AI for semester ${targetSem} analysis...`);
+      const aiResult = await analyzeMarksheetWithAI(cloudinaryUrl, targetSem);
 
       if (aiResult) {
         aiUsed = true;
         console.log(`[Marksheet] AI Result:`, aiResult);
 
-        // Use AI-detected semester or fall back to semCount
-        actualSem = aiResult.semester || semCount;
+        // Trust the explicitly requested targetSem over the AI's detection. 
+        // This prevents issues where testing with the same marksheet forces all data into Semester 1.
+        actualSem = targetSem;
 
-        if (actualSem >= semCount) {
+        if (actualSem >= currentSem) {
           res.status(400).json({
-            error: `Invalid marksheet. You are currently in Semester ${semCount}, so you can only upload marksheets for previous semesters (Semester 1 to ${semCount - 1}). The uploaded marksheet was detected as Semester ${actualSem}.`
+            error: `Invalid marksheet. You are currently in Semester ${currentSem}, so you can only upload marksheets for previous semesters (Semester 1 to ${currentSem - 1}). The uploaded marksheet was detected as Semester ${actualSem}.`
           });
           return;
         }
 
-        // Ensure semesterGpas array has enough space for the target semester
+        // Ensure semesterGpas and semesterCredits array has enough space for the target semester
         while (semesterGpas.length < actualSem) {
           semesterGpas.push(0);
+        }
+        while (semesterCredits.length < actualSem) {
+          semesterCredits.push(0);
         }
 
         // ── Case A: Consolidated transcript — AI returned GPAs for all semesters ──
@@ -181,11 +195,24 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
         }
 
         if (aiResult.creditsEarned !== null && aiResult.creditsEarned > 0) {
-          creditsEarned = aiResult.creditsEarned;
+          semesterCredits[actualSem - 1] = aiResult.creditsEarned;
         }
+        
+        // Recalculate total credits earned
+        creditsEarned = semesterCredits.reduce((sum, val) => sum + (val || 0), 0);
 
         if (aiResult.subjects && aiResult.subjects.length > 0) {
-          subjects = aiResult.subjects;
+          // Remove old subjects for this specific semester to avoid duplicates
+          const otherSemesterSubjects = subjects.filter(sub => sub.semester !== actualSem);
+          
+          // Map new subjects with the specific semester
+          const newSubjects = aiResult.subjects.map(sub => ({
+            semester: actualSem,
+            name: sub.name,
+            score: sub.score
+          }));
+          
+          subjects = [...otherSemesterSubjects, ...newSubjects];
         }
       }
     }
@@ -196,12 +223,15 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
       aiUsed = false;
       semesterGpas = user.academicProfile?.semesterGpas || [];
       currentCgpa = user.academicProfile?.currentCgpa || 0;
-      actualSem = semCount;
+      actualSem = targetSem;
     }
 
     // Limit to completed semesters only (less than current semester)
-    if (semesterGpas.length >= semCount) {
-      semesterGpas = semesterGpas.slice(0, semCount - 1);
+    if (semesterGpas.length >= currentSem) {
+      semesterGpas = semesterGpas.slice(0, currentSem - 1);
+    }
+    if (semesterCredits.length >= currentSem) {
+      semesterCredits = semesterCredits.slice(0, currentSem - 1);
     }
 
     // ─── Step 4: Compute aggregate stats ──────────────────────────────────────
@@ -226,11 +256,12 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
       targetCgpa: user.academicProfile?.targetCgpa || 9.0,
       creditsEarned,
       totalCredits: user.academicProfile?.totalCredits || 160,
-      currentSemester: Math.max(semCount, actualSem),
+      currentSemester: currentSem,
       predictedCgpa,
       highestCgpa,
       averageCgpa,
       semesterGpas,
+      semesterCredits,
       subjects,
     };
 
@@ -257,13 +288,13 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
     // Clean up current or higher semester marksheets
     if (typeof marksheets.delete === "function") {
       for (const key of Array.from(marksheets.keys())) {
-        if (Number(key) >= semCount) {
+        if (Number(key) >= currentSem) {
           marksheets.delete(key);
         }
       }
     } else {
       for (const key of Object.keys(marksheets)) {
-        if (Number(key) >= semCount) {
+        if (Number(key) >= currentSem) {
           delete (marksheets as any)[key];
         }
       }
@@ -279,7 +310,7 @@ export const uploadMarksheet = async (req: AuthRequest, res: Response): Promise<
         ? "Marksheet analyzed successfully using AI Vision."
         : "Marksheet uploaded but AI could not extract grades. Your existing data has been preserved.",
       aiUsed,
-      isSem1: semCount === 1,
+      isSem1: targetSem === 1,
       cloudinaryUrl,
       academicProfile: user.academicProfile,
       user: {

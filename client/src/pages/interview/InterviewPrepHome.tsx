@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { InterviewAttempt, InterviewMock, InterviewPost } from "../../types";
 import {
   createInterviewPost,
@@ -54,6 +55,7 @@ const formatWhen = (date: string) => new Intl.DateTimeFormat("en-IN", {
 }).format(new Date(date));
 
 const InterviewPrepHome: React.FC = () => {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<InterviewDashboard | null>(null);
   const [questions, setQuestions] = useState<InterviewQuestionItem[]>([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState("");
@@ -193,6 +195,9 @@ const InterviewPrepHome: React.FC = () => {
             Practice real questions, submit answers for feedback, schedule mocks, and track readiness.
           </p>
         </div>
+        <button className="btn btn-warning d-flex align-items-center gap-2 fw-medium shadow-sm me-3" onClick={() => navigate('/dashboard/interview-prep/mock')}>
+          <i className="bi bi-robot"></i> AI Mock Interview Simulator
+        </button>
         <button className="btn btn-primary d-flex align-items-center gap-2 fw-medium shadow-sm" onClick={handleSubmitAttempt} disabled={submitting}>
           <i className="bi bi-send"></i>{submitting ? "Reviewing..." : "Submit Answer"}
         </button>
@@ -317,7 +322,7 @@ const InterviewPrepHome: React.FC = () => {
           )}
 
           <div className="row g-4">
-            <div className="col-md-6">
+            <div className="col-md-12">
               <h5 className="fw-bold mb-3">Resources</h5>
               <div className="card border shadow-sm rounded-4 p-4 d-flex flex-column gap-3">
                 {dashboard?.resources.map((resource) => (
@@ -328,28 +333,6 @@ const InterviewPrepHome: React.FC = () => {
                       <div className="text-secondary ip-text-xs">{resource.category} | {resource.type}</div>
                     </div>
                   </a>
-                ))}
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <h5 className="fw-bold mb-3">Community Insights</h5>
-              <div className="card border shadow-sm rounded-4 p-4">
-                <form onSubmit={handleCreatePost} className="mb-3">
-                  <textarea className="form-control bg-light border-0 rounded-4 p-3 shadow-sm mb-2" rows={3} placeholder="Share a useful interview tip..." value={postText} onChange={(event) => setPostText(event.target.value)} />
-                  <button className="btn btn-primary btn-sm px-4 rounded-pill fw-medium shadow-sm" type="submit">Post</button>
-                </form>
-                {dashboard?.posts.map((post) => (
-                  <div className="pt-3 border-top" key={post._id || `${post.authorName}-${post.createdAt}`}>
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <span className="fw-bold text-dark ip-text-base">{post.authorName}</span>
-                      <span className="text-muted ip-time-text">{formatWhen(post.createdAt)}</span>
-                    </div>
-                    <p className="text-dark mb-2 ip-comment-text">{post.text}</p>
-                    <button className="btn btn-link p-0 text-primary fw-medium ip-text-sm" onClick={() => handleHelpful(post)}>
-                      <i className="bi bi-hand-thumbs-up me-1"></i>Helpful ({post.helpfulCount})
-                    </button>
-                  </div>
                 ))}
               </div>
             </div>
@@ -394,33 +377,6 @@ const InterviewPrepHome: React.FC = () => {
             ))}
           </div>
 
-          <div className="card border shadow-sm rounded-4 p-4">
-            <h6 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
-              <i className="bi bi-calendar2-event text-primary fs-5"></i> Mock Interviews
-            </h6>
-            <form onSubmit={handleScheduleMock} className="mb-4">
-              <input className="form-control mb-2" placeholder="Mentor name" value={mentorName} onChange={(event) => setMentorName(event.target.value)} />
-              <input className="form-control mb-2" placeholder="Company / role" value={company} onChange={(event) => setCompany(event.target.value)} />
-              <input className="form-control mb-3" type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} />
-              <button className="btn btn-light border w-100 fw-medium" type="submit">Schedule Mock</button>
-            </form>
-
-            {dashboard?.mocks.length ? dashboard.mocks.map((mock) => (
-              <div className="position-relative border-start border-2 border-primary ms-2 ps-3 mb-4 py-1" key={mock._id || `${mock.mentorName}-${mock.scheduledAt}`}>
-                <div className="position-absolute rounded-circle bg-primary ip-timeline-dot"></div>
-                <div className="fw-bold text-dark fs-6 mb-1">{mock.mentorName}</div>
-                <div className="text-secondary ip-text-xs mb-2">{mock.company} | {formatWhen(mock.scheduledAt)} | {mock.status}</div>
-                {mock.status === "scheduled" && (
-                  <div className="d-flex gap-2">
-                    <button className="btn btn-sm btn-outline-primary rounded-pill" onClick={() => handleUpdateMock(mock, "completed")}>Complete</button>
-                    <button className="btn btn-sm btn-outline-danger rounded-pill" onClick={() => handleUpdateMock(mock, "cancelled")}>Cancel</button>
-                  </div>
-                )}
-              </div>
-            )) : (
-              <p className="text-secondary ip-text-sm">No mocks booked yet.</p>
-            )}
-          </div>
         </div>
       </div>
     </div>

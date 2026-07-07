@@ -14,6 +14,7 @@ const AcademicsHome = lazy(() => import("../pages/academics/AcademicsHome"));
 const AIHome = lazy(() => import("../pages/ai/AIHome"));
 const OpportunitiesHome = lazy(() => import("../pages/opportunities/OpportunitiesHome"));
 const InterviewPrepHome = lazy(() => import("../pages/interview/InterviewPrepHome"));
+const AIMockInterview = lazy(() => import("../pages/interview/AIMockInterview"));
 const SkillDevHome = lazy(() => import("../pages/skill-dev/SkillDevHome"));
 const ExploreCourses = lazy(() => import("../pages/skill-dev/ExploreCourses"));
 const CoursePlayer = lazy(() => import("../pages/skill-dev/CoursePlayer"));
@@ -82,6 +83,7 @@ const AppRoutes: React.FC = () => {
           <Route path="skill-dev/explore" element={<ExploreCourses />} />
           <Route path="skill-dev/course/:playlistId" element={<CoursePlayer />} />
           <Route path="interview-prep" element={<InterviewPrepHome />} />
+          <Route path="interview-prep/mock" element={<AIMockInterview />} />
           <Route path="resume-builder" element={<ResumeBuilderHome />} />
           <Route path="profile" element={<ProfileHome />} />
           <Route path="analytics" element={<DetailedAnalytics />} />

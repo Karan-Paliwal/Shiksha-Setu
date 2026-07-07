@@ -18,14 +18,7 @@ const Dashboard: React.FC = () => {
   const [newLocation, setNewLocation] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
-  // AI Marksheet Upload/Scanning State
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisStep, setAnalysisStep] = useState("");
-  const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [aiUsed, setAiUsed] = useState<boolean | null>(null);
-  const [isSem1Upload, setIsSem1Upload] = useState(false);
+
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -57,77 +50,6 @@ const Dashboard: React.FC = () => {
     fetchProfile();
   }, []);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsAnalyzing(true);
-    setUploadError(null);
-    setUploadSuccess(false);
-    setAiUsed(null);
-    setAnalysisProgress(10);
-    setAnalysisStep("Uploading marksheet to Cloudinary secure storage...");
-
-    const steps = [
-      { progress: 25, step: "Cloudinary: File uploaded and secured in cloud storage..." },
-      { progress: 50, step: "AI Vision: Reading text, tables, and grade data from document..." },
-      { progress: 75, step: "AI Analysis: Extracting semester-wise SGPAs and cumulative CGPA..." },
-      { progress: 90, step: "Predictive Model: Computing degree CGPA projection..." },
-      { progress: 100, step: "Finalizing: Saving AI-verified academic data to your profile..." }
-    ];
-
-    let stepIndex = 0;
-    const interval = setInterval(() => {
-      if (stepIndex < steps.length) {
-        setAnalysisProgress(steps[stepIndex].progress);
-        setAnalysisStep(steps[stepIndex].step);
-        stepIndex++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64Data = reader.result as string;
-      try {
-        // Wait at least 5s — Cloudinary + Gemini AI takes time
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-
-        const response = await api.post("/academics/upload-marksheet", {
-          fileName: file.name,
-          fileType: file.type,
-          fileData: base64Data
-        });
-
-        const updatedProfile = response.data.academicProfile;
-        setAcademicProfile(updatedProfile);
-        setAiUsed(response.data.aiUsed ?? false);
-        setIsSem1Upload(response.data.isSem1 ?? false);
-
-        // Update global auth context user profile
-        if (token) {
-          login(response.data.user, token);
-        }
-
-        setUploadSuccess(true);
-      } catch (err: any) {
-        console.error(err);
-        setUploadError(err.response?.data?.error || "Failed to analyze marksheet document.");
-      } finally {
-        setIsAnalyzing(false);
-        clearInterval(interval);
-      }
-    };
-
-    reader.onerror = () => {
-      setUploadError("Error reading marksheet file.");
-      setIsAnalyzing(false);
-      clearInterval(interval);
-    };
-
-    reader.readAsDataURL(file);
-  };
 
   const handleAddScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,7 +133,43 @@ const Dashboard: React.FC = () => {
   const improvementRateIconClass = improvementRate >= 0 ? "bg-success text-success" : "bg-danger text-danger";
   const improvementRateIcon = improvementRate >= 0 ? "bi-graph-up-arrow" : "bi-graph-down-arrow";
 
-  const progressPercent = totalCredits > 0 ? (creditsEarned / totalCredits) * 100 : 0;
+  const getImprovementNote = (rate: number, hasData: boolean) => {
+    if (!hasData || validSemesterGpas.length < 2) return null;
+    
+    if (rate <= -5) {
+      return (
+        <span className="text-danger fw-medium d-block mt-2 lh-sm db-text-xs">
+          <i className="bi bi-exclamation-triangle-fill me-1"></i>
+          Strict Warning: Significant drop! You need to review your study plan immediately. Focus on weak subjects and seek help.
+        </span>
+      );
+    } else if (rate < 0) {
+      return (
+        <span className="text-warning text-dark fw-medium d-block mt-2 lh-sm db-text-xs">
+          <i className="bi bi-exclamation-circle-fill me-1 text-warning"></i>
+          Warning: Performance dipped. More improvement and consistent effort is required this semester.
+        </span>
+      );
+    } else if (rate < 5) {
+      return (
+        <span className="text-success fw-medium d-block mt-2 lh-sm db-text-xs">
+          <i className="bi bi-emoji-smile-fill me-1"></i>
+          Great job! You're on the right track. Keep up the consistent work!
+        </span>
+      );
+    } else {
+      return (
+        <span className="text-primary fw-bold d-block mt-2 lh-sm db-text-xs">
+          <i className="bi bi-rocket-takeoff-fill me-1"></i>
+          Outstanding! "Success is no accident. It is hard work, perseverance, and learning."
+        </span>
+      );
+    }
+  };
+
+  const creditsProgressPercent = totalCredits > 0 ? (creditsEarned / totalCredits) * 100 : 0;
+  const TOTAL_SEMESTERS = 8;
+  const degreeProgressPercent = Math.min((currentSemester / TOTAL_SEMESTERS) * 100, 100);
 
   // Chart coordinates mapping (SVG dimensions: 1000 x 270)
   const getY = (gpa: number) => Math.max(0, Math.min(270, (10.0 - gpa) * 90));
@@ -234,25 +192,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="fade-in pb-5">
-      {/* AI Scanning Loader Overlay */}
-      {isAnalyzing && (
-        <div className="db-scanner-overlay">
-          <div className="spinner-border text-primary mb-4" role="status" style={{ width: "3.5rem", height: "3.5rem" }}>
-            <span className="visually-hidden">Scanning...</span>
-          </div>
-          <h4 className="fw-bold text-dark mb-2 db-pulse">AI is deeply analyzing your marksheet...</h4>
-          <p className="text-muted db-text-sm mb-4 text-center px-3" style={{ maxWidth: "450px" }}>
-            {analysisStep}
-          </p>
-          <div className="progress w-25" style={{ height: "6px" }}>
-            <div
-              className="progress-bar progress-bar-striped progress-bar-animated bg-primary"
-              style={{ width: `${analysisProgress}%` }}
-            ></div>
-          </div>
-        </div>
-      )}
-
       {/* Header and Actions */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -260,43 +199,11 @@ const Dashboard: React.FC = () => {
           <p className="text-ss-muted mb-0 fs-6">Track your trajectory, credits, and career readiness.</p>
         </div>
         <div className="d-flex gap-2 align-items-center">
-          <input
-            type="file"
-            id="db-marksheet-file"
-            className="d-none"
-            accept=".pdf,.png,.jpg,.jpeg,.webp"
-            onChange={handleFileUpload}
-          />
-          <label htmlFor="db-marksheet-file" className="btn btn-ss-outline bg-white shadow-sm cursor-pointer mb-0">
-            <i className="bi bi-cloud-upload me-2 text-primary"></i>Upload Marksheet (JPG/PNG only)
-          </label>
           <Link to="/dashboard/analytics">
             <button className="btn btn-ss-primary shadow-sm"><i className="bi bi-graph-up-arrow me-2"></i>Detailed Analytics</button>
           </Link>
         </div>
       </div>
-
-      {/* Success/Error Alerts */}
-      {uploadSuccess && (
-        <div className="alert alert-success alert-dismissible fade show mb-4 rounded-3" role="alert">
-          <i className="bi bi-check-circle-fill me-2"></i>
-          <strong>Success!</strong>{" "}
-          {aiUsed
-            ? isSem1Upload
-              ? <>Your Semester 1 marksheet was <span className="badge bg-success ms-1 me-1">AI Successfully Analyzed</span> — your <strong>SGPA: {currentCgpa > 0 ? currentCgpa.toFixed(2) : "—"}</strong> has been extracted and displayed on your dashboard.</>
-              : <>Your marksheet was <span className="badge bg-success ms-1 me-1">AI Successfully Analyzed</span> — semester GPA data extracted from your actual document.</>
-            : <>Your marksheet was uploaded but <span className="badge bg-warning text-dark ms-1 me-1">AI could not extract grades</span> from this document. Your existing data has been preserved. Please try uploading a clearer image of your actual marksheet.</>
-          }
-          <button type="button" className="btn-close" onClick={() => setUploadSuccess(false)}></button>
-        </div>
-      )}
-      {uploadError && (
-        <div className="alert alert-danger alert-dismissible fade show mb-4 rounded-3" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>
-          <strong>Error!</strong> {uploadError}
-          <button type="button" className="btn-close" onClick={() => setUploadError(null)}></button>
-        </div>
-      )}
 
       {/* Row 1: Academic Overview (Glassmorphism Metric Cards) */}
       <div className="row g-4 mb-5">
@@ -335,7 +242,7 @@ const Dashboard: React.FC = () => {
               {creditsEarned} <span className="text-muted fs-4">/ {totalCredits}</span>
             </div>
             <div className="progress mt-3 db-progress-bg">
-              <div className="progress-bar bg-primary" style={{ width: `${progressPercent}%` }}></div>
+              <div className="progress-bar bg-primary" style={{ width: `${creditsProgressPercent}%` }}></div>
             </div>
           </div>
         </div>
@@ -346,9 +253,9 @@ const Dashboard: React.FC = () => {
             <div className="position-relative d-flex justify-content-center align-items-center db-chart-container">
               <svg viewBox="0 0 36 36" className="w-100 h-100 position-absolute top-0 start-0 db-chart-svg">
                 <path className="text-light" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="100, 100" />
-                <path className="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray={`${progressPercent}, 100`} />
+                <path className="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray={`${degreeProgressPercent}, 100`} />
               </svg>
-              <div className="fw-bold fs-4 text-dark position-relative z-1">{Math.round(progressPercent)}%</div>
+              <div className="fw-bold fs-4 text-dark position-relative z-1">{Math.round(degreeProgressPercent)}%</div>
             </div>
             <div>
               <div className="text-ss-muted fw-semibold mb-1 text-uppercase db-text-xs-spacing">Degree Progress</div>
@@ -540,6 +447,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div className="text-muted ms-5 ps-1 db-text-xs-alt">Semester-over-semester</div>
+              <div className="ms-1 mt-1">{getImprovementNote(improvementRate, hasRealData)}</div>
             </div>
 
           </div>

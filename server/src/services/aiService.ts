@@ -100,3 +100,117 @@ export const getAIResponse = async (prompt: string, mode: string = "default", fi
     timestamp: new Date().toISOString(),
   };
 };
+
+export interface MockHistoryMessage {
+  role: "user" | "model";
+  text: string;
+}
+
+export const generateMockQuestion = async (
+  history: MockHistoryMessage[],
+  mode: string,
+  resumeText?: string
+) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: { responseMimeType: "application/json" }
+  });
+
+  let systemPrompt = `You are a strict and professional technical interviewer. You are conducting a mock interview for a software engineering role.
+The mode of this interview is: ${mode}.
+${mode === "behavioral" ? "Ask behavioral questions focusing on past experiences, conflict resolution, leadership, and teamwork." : "Ask technical questions involving algorithms, data structures, and system design."}
+${resumeText ? `The candidate's resume text is provided below. Tailor your FIRST question to their specific experience and projects if this is the start of the interview.\nResume:\n${resumeText}\n` : ""}
+Review the conversation history and ask exactly ONE appropriate next interview question. Do not answer the question yourself.
+
+You MUST respond ONLY in this JSON format:
+{
+  "question": "The interview question here",
+  "hints": ["Hint 1", "Hint 2"]
+}`;
+
+  const parts = [{ text: systemPrompt }];
+  const historyText = history.map(h => `${h.role === 'user' ? 'Candidate' : 'Interviewer'}: ${h.text}`).join('\n\n');
+  if (historyText) {
+    parts.push({ text: `\n\n--- Conversation History ---\n${historyText}\n\nBased on the history, ask the NEXT question.` });
+  } else {
+    parts.push({ text: `\n\nAsk the FIRST interview question.` });
+  }
+
+  const result = await model.generateContent(parts);
+  const responseText = result.response.text();
+  return JSON.parse(responseText);
+};
+
+export const evaluateMockAnswer = async (
+  history: MockHistoryMessage[],
+  answer: string,
+  code: string | undefined,
+  mode: string
+) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: { responseMimeType: "application/json" }
+  });
+
+  let systemPrompt = `You are a technical interviewer evaluating a candidate's answer.
+The mode is: ${mode}.
+${mode === "behavioral" ? "Evaluate the answer strictly using the STAR (Situation, Task, Action, Result) method. Point out what's missing." : "Evaluate the provided answer and code for time complexity, space complexity, correctness, and edge cases."}
+
+Review the conversation history to understand the question asked. 
+Then evaluate the candidate's latest answer.
+
+You MUST respond ONLY in this JSON format:
+{
+  "feedback": "Detailed feedback on their answer",
+  "score": 8,
+  "isGoodEnoughToMoveOn": true
+}`;
+
+  const historyText = history.map(h => `${h.role === 'user' ? 'Candidate' : 'Interviewer'}: ${h.text}`).join('\n\n');
+  const prompt = `${systemPrompt}\n\n--- Conversation History ---\n${historyText}\n\n--- Candidate's Latest Answer ---\nText: ${answer}\nCode: ${code || 'N/A'}`;
+
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text();
+  return JSON.parse(responseText);
+};
+
+export const generateMockScorecard = async (
+  history: MockHistoryMessage[]
+) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: { responseMimeType: "application/json" }
+  });
+
+  let systemPrompt = `You are a hiring manager reviewing a completed mock interview transcript.
+Analyze the entire conversation and generate a final evaluation scorecard.
+
+You MUST respond ONLY in this JSON format:
+{
+  "overallScore": 7,
+  "technicalAccuracy": 8,
+  "communication": 6,
+  "problemSolving": 7,
+  "strengths": ["Strength 1", "Strength 2"],
+  "areasForImprovement": ["Area 1", "Area 2"],
+  "finalVerdict": "A short summary of whether they would pass a real interview."
+}`;
+
+  const historyText = history.map(h => `${h.role === 'user' ? 'Candidate' : 'Interviewer'}: ${h.text}`).join('\n\n');
+  
+  const result = await model.generateContent(`${systemPrompt}\n\n--- Conversation History ---\n${historyText}`);
+  const responseText = result.response.text();
+  return JSON.parse(responseText);
+};

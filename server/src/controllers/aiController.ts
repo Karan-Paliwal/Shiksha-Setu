@@ -91,3 +91,44 @@ export const deleteSession = async (req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({ error: "Failed to delete chat session" });
   }
 };
+
+export const startMock = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { history, mode, resumeText } = req.body;
+    const result = await aiService.generateMockQuestion(history || [], mode || "behavioral", resumeText);
+    res.json(result);
+  } catch (error: any) {
+    console.error("Start Mock Error:", error);
+    res.status(500).json({ error: error.message || "Failed to start mock interview" });
+  }
+};
+
+export const chatMock = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { history, answer, code, mode } = req.body;
+    if (!answer && !code) {
+      res.status(400).json({ error: "Answer or code is required" });
+      return;
+    }
+    const result = await aiService.evaluateMockAnswer(history || [], answer, code, mode || "behavioral");
+    res.json(result);
+  } catch (error: any) {
+    console.error("Chat Mock Error:", error);
+    res.status(500).json({ error: error.message || "Failed to evaluate answer" });
+  }
+};
+
+export const finishMock = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { history } = req.body;
+    if (!history || history.length === 0) {
+      res.status(400).json({ error: "History is required to generate scorecard" });
+      return;
+    }
+    const result = await aiService.generateMockScorecard(history);
+    res.json(result);
+  } catch (error: any) {
+    console.error("Finish Mock Error:", error);
+    res.status(500).json({ error: error.message || "Failed to generate scorecard" });
+  }
+};

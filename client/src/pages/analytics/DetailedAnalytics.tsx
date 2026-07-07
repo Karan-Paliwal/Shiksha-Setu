@@ -8,7 +8,12 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis
 } from "recharts";
 
 import "./DetailedAnalytics.css";
@@ -51,22 +56,51 @@ const DetailedAnalytics: React.FC = () => {
   const lowestSgpa = Math.min(...semesterGpas);
   const criticalSemIndex = semesterGpas.indexOf(lowestSgpa);
 
+  // Group subjects by semester
+  const subjectsBySemester: Record<number, any[]> = {};
+  if (profile.subjects && profile.subjects.length > 0) {
+    profile.subjects.forEach((sub: any) => {
+      const sem = sub.semester || 1;
+      if (!subjectsBySemester[sem]) subjectsBySemester[sem] = [];
+      subjectsBySemester[sem].push({
+        subject: sub.name,
+        A: sub.score,
+        fullMark: 100
+      });
+    });
+  }
 
+
+
+  const uploadedMarksheetsCount = profile.semesterGpas ? profile.semesterGpas.filter(g => g > 0).length : 0;
+  const remainingSemesters = Math.max(0, 8 - uploadedMarksheetsCount);
 
   // Calculate What-If scenario
   useEffect(() => {
-    const remainingSemesters = 8 - (profile.currentSemester || 1);
-    if (remainingSemesters > 0 && creditsEarned < totalCredits) {
-      // Simplistic calculation assuming equal credits per semester
-      const remainingCredits = totalCredits - creditsEarned;
-      const currentPoints = currentCgpa * creditsEarned;
-      const futurePoints = expectedSgpa * remainingCredits;
-      const newCgpa = (currentPoints + futurePoints) / totalCredits;
+    if (remainingSemesters > 0) {
+      let newCgpa = currentCgpa;
+      
+      if (creditsEarned > 0 && creditsEarned < totalCredits) {
+        // High accuracy: Use actual extracted credits
+        const remainingCredits = totalCredits - creditsEarned;
+        const currentPoints = currentCgpa * creditsEarned;
+        const futurePoints = expectedSgpa * remainingCredits;
+        newCgpa = (currentPoints + futurePoints) / totalCredits;
+      } else if (uploadedMarksheetsCount > 0) {
+        // Fallback: Use semester-weight equality
+        const currentPoints = currentCgpa * uploadedMarksheetsCount;
+        const futurePoints = expectedSgpa * remainingSemesters;
+        newCgpa = (currentPoints + futurePoints) / 8;
+      } else {
+        // No marksheets uploaded yet
+        newCgpa = expectedSgpa;
+      }
+      
       setProjectedCgpa(Number(newCgpa.toFixed(2)));
     } else {
       setProjectedCgpa(currentCgpa);
     }
-  }, [expectedSgpa, currentCgpa, creditsEarned, totalCredits, profile.currentSemester]);
+  }, [expectedSgpa, currentCgpa, creditsEarned, totalCredits, uploadedMarksheetsCount, remainingSemesters]);
 
   return (
     <div className="fade-in pb-5 analytics-container">
@@ -144,7 +178,7 @@ const DetailedAnalytics: React.FC = () => {
               </div>
               <h4 className="fw-bold text-dark mb-0">"What-If" Scenario Planner</h4>
             </div>
-            <p className="text-muted small">Slide to predict how your upcomming semester performance will impact your final CGPA.</p>
+            <p className="text-muted small">Slide to predict how your performance across your remaining {remainingSemesters} semester{remainingSemesters !== 1 ? 's' : ''} will impact your final CGPA.</p>
 
             <div className="flex-grow-1 d-flex flex-column justify-content-center my-4">
               <div className="text-center mb-5">
@@ -154,7 +188,7 @@ const DetailedAnalytics: React.FC = () => {
 
               <div className="px-3 mb-5">
                 <div className="d-flex justify-content-between mb-2">
-                  <span className="fw-semibold text-secondary">Expected Next SGPA</span>s
+                  <span className="fw-semibold text-secondary">Expected Future SGPA</span>
                   <span className="fw-bold text-primary fs-5">{expectedSgpa.toFixed(1)}</span>
                 </div>
                 <input
@@ -185,10 +219,51 @@ const DetailedAnalytics: React.FC = () => {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
+
+      {/* Subject Performance Radar Charts */}
+      {Object.keys(subjectsBySemester).length > 0 && (
+        <div className="mt-5">
+          <div className="d-flex align-items-center mb-4">
+            <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+              <i className="bi bi-radar"></i>
+            </div>
+            <h4 className="fw-bold text-dark mb-0">Semester-wise Subject Performance</h4>
+          </div>
+          
+          <div className="row g-4">
+            {Object.keys(subjectsBySemester).map(sem => (
+              <div className="col-md-6 col-lg-4" key={sem}>
+                <div className="analytics-card p-4 rounded-4 h-100 d-flex flex-column align-items-center bg-white border shadow-sm transition hover-shadow">
+                  <h6 className="fw-bold text-secondary mb-3 text-uppercase letter-spacing-1">Semester {sem}</h6>
+                  <div style={{ width: '100%', height: '250px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={subjectsBySemester[Number(sem)]}>
+                        <PolarGrid stroke="#e9ecef" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#495057', fontSize: 10, fontWeight: 600 }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
+                        <Radar
+                          name={`Semester ${sem}`}
+                          dataKey="A"
+                          stroke="#2563eb"
+                          fill="#3b82f6"
+                          fillOpacity={0.5}
+                        />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

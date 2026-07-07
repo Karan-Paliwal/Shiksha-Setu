@@ -10,7 +10,8 @@ export interface IAcademicProfile {
   highestCgpa?: number;
   averageCgpa?: number;
   semesterGpas?: number[];
-  subjects?: { name: string; score: number }[];
+  semesterCredits?: number[];
+  subjects?: { semester?: number; name: string; score: number }[];
 }
 
 export interface IProfileDetails {
@@ -79,8 +80,10 @@ const UserSchema = new Schema<IUser>({
     highestCgpa: { type: Number, default: 0 },
     averageCgpa: { type: Number, default: 0 },
     semesterGpas: { type: [Number], default: [] },
+    semesterCredits: { type: [Number], default: [] },
     subjects: [
       {
+        semester: { type: Number, default: 1 },
         name: { type: String, required: true },
         score: { type: Number, required: true },
       }

@@ -3,6 +3,42 @@ import User from "../models/User";
 import { AuthRequest } from "../middleware/auth";
 import { analyzeMarksheetWithAI } from "../services/aiScannerService";
 
+export const clearMarksheets = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    if (user.documents && user.documents.marksheets) {
+      user.documents.marksheets = new Map();
+    }
+
+    if (user.academicProfile) {
+      user.academicProfile.currentCgpa = 0;
+      user.academicProfile.predictedCgpa = 0;
+      user.academicProfile.highestCgpa = 0;
+      user.academicProfile.averageCgpa = 0;
+      user.academicProfile.semesterGpas = [];
+      user.academicProfile.semesterCredits = [];
+      user.academicProfile.subjects = [];
+      user.academicProfile.creditsEarned = 0;
+    }
+
+    user.markModified('documents.marksheets');
+    user.markModified('academicProfile');
+    await user.save();
+
+    res.status(200).json({ message: "Marksheets and associated academic data cleared successfully", user });
+  } catch (error: any) {
+    console.error("Clear Marksheets Error:", error.message);
+    res.status(500).json({ error: "Server error clearing marksheets" });
+  }
+};
+
+
 export const setupProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.userId;
@@ -70,6 +106,9 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
              if (!user.academicProfile!.semesterGpas) {
                 user.academicProfile!.semesterGpas = [];
              }
+             if (!user.academicProfile!.semesterCredits) {
+                user.academicProfile!.semesterCredits = [];
+             }
              
              // Use AI-detected semester or fall back to the one from fieldname
              const actualSem = aiResult.semester || semester;
@@ -84,6 +123,9 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
              // Ensure array has enough elements
              while (user.academicProfile!.semesterGpas.length < actualSem) {
                 user.academicProfile!.semesterGpas.push(0);
+             }
+             while (user.academicProfile!.semesterCredits.length < actualSem) {
+                user.academicProfile!.semesterCredits.push(0);
              }
 
              // Handle consolidated transcript if available, otherwise single semester GPA
@@ -113,13 +155,19 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
              }
              
              if (aiResult.creditsEarned !== null && aiResult.creditsEarned > 0) {
-                 user.academicProfile!.creditsEarned = aiResult.creditsEarned;
+                 user.academicProfile!.semesterCredits[actualSem - 1] = aiResult.creditsEarned;
              }
+             
+             // Recalculate total credits earned
+             user.academicProfile!.creditsEarned = user.academicProfile!.semesterCredits.reduce((sum, val) => sum + (val || 0), 0);
              
              // Limit to completed semesters only (less than current semester)
              const currentSem = user.academicProfile!.currentSemester || 1;
              if (user.academicProfile!.semesterGpas.length >= currentSem) {
                 user.academicProfile!.semesterGpas = user.academicProfile!.semesterGpas.slice(0, currentSem - 1);
+             }
+             if (user.academicProfile!.semesterCredits.length >= currentSem) {
+                user.academicProfile!.semesterCredits = user.academicProfile!.semesterCredits.slice(0, currentSem - 1);
              }
 
              // Re-calculate average CGPA if possible

@@ -86,7 +86,7 @@ Rules:
 - "semester" = the semester number this single-semester marksheet is for (e.g. 1, 2, 3...). If the document is a consolidated transcript showing multiple semesters, set this to the highest/latest semester number shown.
 - "sgpa" = the GPA/SPI/SGPA for this semester specifically
 - "cgpa" = the cumulative/overall GPA shown on this document
-- "creditsEarned" = total credits earned (cumulative number if shown)
+- "creditsEarned" = credits earned for THIS specific semester only (do NOT return the cumulative/overall total credits).
 - "allSemesterGpas" = ONLY fill this if the document shows results for MORE than one semester (consolidated transcript). Map each visible semester number to its SGPA.
 - "subjects" = Extract all individual subjects listed. "score" MUST BE normalized to a 0-100 percentage scale (e.g. if the student scored 8.5/10, score=85. If 85/100, score=85).
 - If a value is not clearly visible, set it to null

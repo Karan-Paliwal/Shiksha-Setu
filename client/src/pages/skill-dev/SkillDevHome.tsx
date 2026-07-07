@@ -1,9 +1,94 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
 import CertificateViewerModal from "../../components/CertificateViewerModal";
 import "./SkillDevHome.css";
+
+interface InternshipAlert {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  deadline: string;
+  stipend: string;
+  stream: string;
+  applyUrl: string;
+}
+
+const internshipAlerts: InternshipAlert[] = [
+  {
+    id: "google-frontend",
+    title: "Frontend Engineering Intern",
+    company: "Google",
+    location: "Bangalore",
+    deadline: "2026-07-02T23:59:59.000Z",
+    stipend: "Competitive",
+    stream: "Engineering",
+    applyUrl: "https://buildyourfuture.withgoogle.com/internships",
+  },
+  {
+    id: "zomato-product-design",
+    title: "Product Design Intern",
+    company: "Zomato",
+    location: "Gurugram",
+    deadline: "2026-07-05T23:59:59.000Z",
+    stipend: "INR 25,000/month",
+    stream: "Design",
+    applyUrl: "https://www.zomato.com/careers",
+  },
+  {
+    id: "meity-digital-india",
+    title: "Digital India Internship",
+    company: "MeitY",
+    location: "New Delhi / Remote",
+    deadline: "2026-07-12T23:59:59.000Z",
+    stipend: "Government norms",
+    stream: "CS / IT",
+    applyUrl: "https://www.meity.gov.in/",
+  },
+  {
+    id: "microsoft-swe",
+    title: "Software Engineering Intern",
+    company: "Microsoft",
+    location: "Hyderabad",
+    deadline: "2026-07-15T23:59:59.000Z",
+    stipend: "Competitive",
+    stream: "Computer Science",
+    applyUrl: "https://careers.microsoft.com/students/us/en",
+  },
+  {
+    id: "amazon-sde",
+    title: "SDE Intern",
+    company: "Amazon",
+    location: "Bangalore",
+    deadline: "2026-07-20T23:59:59.000Z",
+    stipend: "INR 80,000/month",
+    stream: "Engineering",
+    applyUrl: "https://www.amazon.jobs/en/teams/internships-for-students",
+  },
+  {
+    id: "infosys-instep",
+    title: "InStep Internship",
+    company: "Infosys",
+    location: "Bangalore",
+    deadline: "2026-07-30T23:59:59.000Z",
+    stipend: "Competitive",
+    stream: "IT / Business",
+    applyUrl: "https://www.infosys.com/instep.html",
+  },
+];
+
+const getDaysLeft = (value: string) => {
+  const today = new Date();
+  const deadline = new Date(value);
+  const diff = deadline.getTime() - today.getTime();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+};
+
+const openUrl = (url: string) => {
+  window.open(url, "_blank", "noopener,noreferrer");
+};
 
 const SkillDevHome: React.FC = () => {
   const navigate = useNavigate();
@@ -36,8 +121,18 @@ const SkillDevHome: React.FC = () => {
   const [learningStats, setLearningStats] = useState({
     dailyLearningGoal: 60,
     todayLearningTime: 0,
-    learningStreak: 0
   });
+
+  const [savedInternships, setSavedInternships] = useState<string[]>([]);
+  const [showAllInternships, setShowAllInternships] = useState(false);
+  
+  const topInternships = useMemo(() => [...internshipAlerts].sort((first, second) => getDaysLeft(first.deadline) - getDaysLeft(second.deadline)), []);
+
+  const toggleInternshipSave = (internshipId: string) => {
+    setSavedInternships((current) =>
+      current.includes(internshipId) ? current.filter((id) => id !== internshipId) : [...current, internshipId]
+    );
+  };
 
   useEffect(() => {
     fetchActiveCourses();
@@ -374,6 +469,66 @@ const SkillDevHome: React.FC = () => {
             </button>
           </div>
 
+          {/* Top Internship Alerts */}
+          <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
+            <div>
+              <h5 className="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i className="bi bi-briefcase text-primary fs-4"></i> Top Internship Alerts
+              </h5>
+              <p className="text-secondary mb-0 sd-assessment-subtitle">
+                Apply for hand-picked internship opportunities tailored to your skills.
+              </p>
+            </div>
+          </div>
+          
+          <div className="row g-4 mb-4">
+            {topInternships.slice(0, showAllInternships ? topInternships.length : 2).map((internship) => {
+              const daysLeft = getDaysLeft(internship.deadline);
+              const isSaved = savedInternships.includes(internship.id);
+              return (
+                <div className="col-md-6" key={internship.id}>
+                  <div className="card border shadow-sm rounded-4 p-4 h-100 hover-shadow transition d-flex flex-column">
+                    <div className="d-flex justify-content-between align-items-start mb-3">
+                      <div className="bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded d-flex justify-content-center align-items-center" style={{ width: '45px', height: '45px' }}>
+                        <i className="bi bi-briefcase-fill fs-4"></i>
+                      </div>
+                      <span className={`badge rounded-pill ${daysLeft <= 3 ? "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" : "bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"}`}>
+                        {daysLeft} days left
+                      </span>
+                    </div>
+                    <div className="fw-bold text-dark mb-1 fs-6">{internship.title}</div>
+                    <div className="text-secondary small mb-3">
+                      <i className="bi bi-building me-1"></i>{internship.company} • <i className="bi bi-geo-alt me-1"></i>{internship.location}
+                    </div>
+                    <div className="d-flex flex-wrap gap-2 mb-4">
+                      <span className="badge bg-light text-dark border fw-medium"><i className="bi bi-cash text-success me-1"></i>{internship.stipend}</span>
+                      <span className="badge bg-light text-dark border fw-medium"><i className="bi bi-mortarboard text-primary me-1"></i>{internship.stream}</span>
+                    </div>
+                    <div className="d-flex gap-2 mt-auto">
+                      <button className={`btn btn-sm ${isSaved ? 'btn-primary' : 'btn-light border'} rounded-circle d-flex align-items-center justify-content-center`} style={{ width: '36px', height: '36px' }} onClick={() => toggleInternshipSave(internship.id)} aria-label={isSaved ? "Unsave internship" : "Save internship"}>
+                        <i className={`bi ${isSaved ? "bi-bookmark-fill" : "bi-bookmark text-secondary"}`}></i>
+                      </button>
+                      <button className="btn btn-sm btn-primary rounded-pill px-4 fw-medium flex-grow-1" onClick={() => openUrl(internship.applyUrl)}>Apply Now</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="text-center mb-5 mt-3">
+            <button 
+              onClick={() => setShowAllInternships(!showAllInternships)} 
+              className="btn btn-outline-primary rounded-pill px-4 fw-medium shadow-sm"
+            >
+              {showAllInternships ? (
+                <><i className="bi bi-chevron-up"></i> Show Less</>
+              ) : (
+                <><i className="bi bi-chevron-down"></i> See More Internships</>
+              )}
+            </button>
+          </div>
+
           {/* Certifications Earned Section */}
           <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
             <div>
@@ -393,13 +548,13 @@ const SkillDevHome: React.FC = () => {
           </div>
 
           {certifications.length === 0 ? (
-            <div className="card border shadow-sm rounded-4 p-5 text-center text-secondary mb-4 bg-light">
+            <div className="card border shadow-sm rounded-4 p-5 text-center text-secondary mb-5 bg-light">
               <i className="bi bi-award fs-1 mb-3 text-secondary opacity-50"></i>
               <h6 className="fw-bold text-dark">No certifications added yet</h6>
               <p className="text-secondary small mb-0">Complete playlist courses or verify your external Credly badges to showcase your credentials here.</p>
             </div>
           ) : (
-            <div className="row g-4 mb-4">
+            <div className="row g-4 mb-5">
               {certifications.map((cert) => {
                 const isInternal = cert.type === 'internal';
                 return (
@@ -443,7 +598,7 @@ const SkillDevHome: React.FC = () => {
               })}
             </div>
           )}
-          
+
         </div>
 
         {/* Right Sidebar (col-lg-4) */}
@@ -474,6 +629,17 @@ const SkillDevHome: React.FC = () => {
                 ? `You're on a ${learningStats.learningStreak}-day streak! 🔥` 
                 : 'Start your learning streak today! 🚀'}
             </p>
+          </div>
+
+          {/* Saved Internships Stat */}
+          <div className="card border shadow-sm rounded-4 p-4 mb-4 d-flex flex-row align-items-center gap-4 hover-shadow transition">
+            <div className="bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-circle d-flex justify-content-center align-items-center" style={{ width: '56px', height: '56px', minWidth: '56px' }}>
+              <i className="bi bi-briefcase-fill fs-4"></i>
+            </div>
+            <div>
+              <div className="text-secondary mb-1 small fw-medium text-uppercase">Saved Internships</div>
+              <div className="fw-bold fs-3 text-dark">{savedInternships.length.toString().padStart(2, "0")}</div>
+            </div>
           </div>
 
           {/* Verified Skills */}
@@ -538,6 +704,7 @@ const SkillDevHome: React.FC = () => {
               </button>
             </div>
           </div>
+
 
         </div>
       </div>

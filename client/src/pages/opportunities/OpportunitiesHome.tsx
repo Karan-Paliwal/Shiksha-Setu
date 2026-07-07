@@ -17,16 +17,6 @@ interface EligibilityCriteria {
   isSpeciallyAbled: boolean;
 }
 
-interface InternshipAlert {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  deadline: string;
-  stipend: string;
-  stream: string;
-  applyUrl: string;
-}
 
 const defaultFilters: ScholarshipFilters = {
   state: "All",
@@ -46,39 +36,6 @@ const initialEligibilityCriteria: EligibilityCriteria = {
   isGirlStudent: false,
   isSpeciallyAbled: false,
 };
-
-const internshipAlerts: InternshipAlert[] = [
-  {
-    id: "google-frontend",
-    title: "Frontend Engineering Intern",
-    company: "Google",
-    location: "Bangalore",
-    deadline: "2026-07-02T23:59:59.000Z",
-    stipend: "Competitive",
-    stream: "Engineering",
-    applyUrl: "https://buildyourfuture.withgoogle.com/internships",
-  },
-  {
-    id: "zomato-product-design",
-    title: "Product Design Intern",
-    company: "Zomato",
-    location: "Gurugram",
-    deadline: "2026-07-05T23:59:59.000Z",
-    stipend: "INR 25,000/month",
-    stream: "Design",
-    applyUrl: "https://www.zomato.com/careers",
-  },
-  {
-    id: "meity-digital-india",
-    title: "Digital India Internship",
-    company: "MeitY",
-    location: "New Delhi / Remote",
-    deadline: "2026-07-12T23:59:59.000Z",
-    stipend: "Government norms",
-    stream: "CS / IT",
-    applyUrl: "https://www.meity.gov.in/",
-  },
-];
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-IN", {
@@ -155,7 +112,7 @@ const OpportunitiesHome: React.FC = () => {
   const [showAll, setShowAll] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [savedInternships, setSavedInternships] = useState<string[]>([]);
+
   const [criteria, setCriteria] = useState<EligibilityCriteria>(initialEligibilityCriteria);
   const [eligibilityResults, setEligibilityResults] = useState<Array<Scholarship & { matchScore: number }>>([]);
   const [eligibilityMessage, setEligibilityMessage] = useState("Fill your details and check matches.");
@@ -230,7 +187,7 @@ const OpportunitiesHome: React.FC = () => {
   const featuredScholarship = sortedScholarships[0];
   const deadlinePulse = useMemo(() => sortedScholarships.slice(0, 4), [sortedScholarships]);
   const activeFilterCount = Object.values(filters).filter((value) => value && value !== "All").length;
-  const topInternships = useMemo(() => [...internshipAlerts].sort((first, second) => getDaysLeft(first.deadline) - getDaysLeft(second.deadline)), []);
+
 
   const updateFilter = (key: FilterKey, value: string) => {
     setFilters((current) => ({ ...current, [key]: value }));
@@ -257,12 +214,6 @@ const OpportunitiesHome: React.FC = () => {
       category: "All",
     });
     setShowAll(true);
-  };
-
-  const toggleInternshipSave = (internshipId: string) => {
-    setSavedInternships((current) =>
-      current.includes(internshipId) ? current.filter((id) => id !== internshipId) : [...current, internshipId]
-    );
   };
 
   return (
@@ -304,7 +255,7 @@ const OpportunitiesHome: React.FC = () => {
       )}
 
       <div className="row g-4 mb-4">
-        <div className="col-md-4">
+        <div className="col-md-6">
           <div className="ss-card d-flex align-items-center gap-4">
             <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center oh-icon-md">
               <i className="bi bi-currency-rupee fs-4"></i>
@@ -315,7 +266,7 @@ const OpportunitiesHome: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-md-6">
           <div className="ss-card d-flex align-items-center gap-4">
             <div className="bg-light text-dark border rounded-circle d-flex justify-content-center align-items-center oh-icon-md">
               <i className="bi bi-mortarboard fs-4"></i>
@@ -323,17 +274,6 @@ const OpportunitiesHome: React.FC = () => {
             <div>
               <div className="text-ss-muted mb-1 oh-text-sm">Eligible Schemes</div>
               <div className="fw-bold fs-3 text-dark">{scholarships.length} Active</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="ss-card d-flex align-items-center gap-4">
-            <div className="bg-light text-dark border rounded-circle d-flex justify-content-center align-items-center oh-icon-md">
-              <i className="bi bi-briefcase fs-4"></i>
-            </div>
-            <div>
-              <div className="text-ss-muted mb-1 oh-text-sm">Saved Internships</div>
-              <div className="fw-bold fs-3 text-dark">{savedInternships.length.toString().padStart(2, "0")} Saved</div>
             </div>
           </div>
         </div>
@@ -455,36 +395,7 @@ const OpportunitiesHome: React.FC = () => {
             </div>
           )}
 
-          <h5 className="fw-bold mb-3 d-flex align-items-center gap-2"><i className="bi bi-briefcase text-primary"></i> Top Internship Alerts</h5>
-          <div className="row g-3">
-            {topInternships.map((internship) => {
-              const daysLeft = getDaysLeft(internship.deadline);
-              const isSaved = savedInternships.includes(internship.id);
-              return (
-                <div className="col-md-6" key={internship.id}>
-                  <div className="ss-card p-3 d-flex align-items-center gap-3 h-100">
-                    <div className="border rounded bg-light p-3 text-primary"><i className="bi bi-briefcase fs-4"></i></div>
-                    <div className="flex-grow-1">
-                      <div className="fw-bold text-dark">{internship.title}</div>
-                      <div className="text-muted oh-text-xs-alt">{internship.company} - {internship.location}</div>
-                      <div className="text-muted oh-text-xs-alt">{internship.stipend} - {internship.stream}</div>
-                    </div>
-                    <div className="d-flex flex-column align-items-end gap-2">
-                      <span className={`badge rounded-pill ${daysLeft <= 3 ? "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" : "bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"}`}>
-                        {daysLeft} days left
-                      </span>
-                      <div className="d-flex gap-1">
-                        <button className="btn btn-sm btn-light border" onClick={() => toggleInternshipSave(internship.id)} aria-label={isSaved ? "Unsave internship" : "Save internship"}>
-                          <i className={`bi ${isSaved ? "bi-bookmark-fill text-primary" : "bi-bookmark"}`}></i>
-                        </button>
-                        <button className="btn btn-sm btn-primary" onClick={() => openUrl(internship.applyUrl)}>Apply</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+
         </div>
 
         <div className="col-lg-4">
