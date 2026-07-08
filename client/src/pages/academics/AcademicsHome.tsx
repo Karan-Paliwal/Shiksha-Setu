@@ -113,10 +113,20 @@ const AcademicsHome: React.FC = () => {
           </div>
           <h1 className="fw-bold text-ss-bright fs-2 mb-1">Semester {semester} Overview</h1>
           <p className="text-ss-muted mb-0 fs-6">
-            CGPA {profile?.currentCgpa || 0} / 10 | Credits {profile?.creditsEarned || 0}/{profile?.totalCredits || 0}
+            CGPA {(profile?.hasActiveBacklogs && !profile?.currentCgpa) ? "N/A (Clear Backlogs)" : (profile?.currentCgpa || 0)} / 10 | Credits {profile?.creditsEarned || 0}/{profile?.totalCredits || 0}
           </p>
         </div>
       </div>
+
+      {profile?.hasActiveBacklogs && (
+        <div className="alert alert-danger d-flex align-items-center gap-3 mb-4 border-0 shadow-sm rounded-4">
+          <i className="bi bi-exclamation-triangle-fill fs-4 text-danger"></i>
+          <div>
+            <div className="fw-bold text-dark">Active Re-appear Detected</div>
+            <div className="text-muted ah-text-sm">You have an active backlog in one or more subjects. Please focus on clearing your semester to improve your overall academic standing and eligibility.</div>
+          </div>
+        </div>
+      )}
 
       {error && <div className="alert alert-danger">{error}</div>}
 
@@ -124,13 +134,13 @@ const AcademicsHome: React.FC = () => {
         <div className="col-md-4">
           <div className="ss-card p-4">
             <div className="text-ss-muted ah-text-sm">Predicted CGPA</div>
-            <div className="fw-bold fs-3 text-dark">{profile?.predictedCgpa || profile?.currentCgpa || 0}</div>
+            <div className="fw-bold fs-3 text-dark">{(profile?.hasActiveBacklogs && !profile?.currentCgpa) ? "N/A" : (profile?.predictedCgpa || profile?.currentCgpa || 0)}</div>
           </div>
         </div>
         <div className="col-md-4">
           <div className="ss-card p-4">
             <div className="text-ss-muted ah-text-sm">Highest Semester GPA</div>
-            <div className="fw-bold fs-3 text-dark">{profile?.highestCgpa || 0}</div>
+            <div className="fw-bold fs-3 text-dark">{(profile?.hasActiveBacklogs && !profile?.highestCgpa) ? "N/A" : (profile?.highestCgpa || 0)}</div>
           </div>
         </div>
         <div className="col-md-4">

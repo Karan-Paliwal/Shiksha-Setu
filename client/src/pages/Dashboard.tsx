@@ -217,7 +217,7 @@ const Dashboard: React.FC = () => {
               {currentSemester === 1 ? "Semester 1 SGPA" : "Current CGPA"}
             </div>
             <div className="fs-1 fw-bold text-ss-bright mb-2 d-flex align-items-center gap-2">
-              {currentCgpa > 0 ? currentCgpa.toFixed(2) : "0.00"} <i className="bi bi-arrow-up-right-circle-fill text-success fs-5"></i>
+              {(profile.hasActiveBacklogs && !currentCgpa) ? <span className="fs-4 text-warning">N/A (Clear Backlogs)</span> : (currentCgpa > 0 ? currentCgpa.toFixed(2) : "0.00")} {(!profile.hasActiveBacklogs || currentCgpa > 0) && <i className="bi bi-arrow-up-right-circle-fill text-success fs-5"></i>}
             </div>
             {currentSemester === 1 ? (
               <div className="d-inline-block badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1 db-text-xs">
@@ -275,7 +275,7 @@ const Dashboard: React.FC = () => {
               <i className="bi bi-lightning-charge-fill"></i> Predicted CGPA
             </div>
             <div className="fs-1 fw-bold text-dark mb-2">
-              {displayPredictedCgpa.toFixed(2)}
+              {(profile.hasActiveBacklogs && !displayPredictedCgpa) ? <span className="fs-4 text-muted">N/A</span> : displayPredictedCgpa.toFixed(2)}
             </div>
             <div className="text-dark opacity-75 db-text-sm">
               Projected upon graduation if current trend continues.
@@ -413,7 +413,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-ss-muted fw-semibold text-uppercase db-text-xxs-spacing">Highest CGPA</div>
-                  <div className="fw-bold fs-4 text-dark">{hasRealData ? displayHighestCgpa.toFixed(2) : "—"}</div>
+                  <div className="fw-bold fs-4 text-dark">{(profile.hasActiveBacklogs && !displayHighestCgpa) ? "N/A" : (hasRealData ? displayHighestCgpa.toFixed(2) : "—")}</div>
                 </div>
               </div>
               <div className="text-muted ms-5 ps-1 db-text-xs-alt">
@@ -429,7 +429,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-ss-muted fw-semibold text-uppercase db-text-xxs-spacing">Average CGPA</div>
-                  <div className="fw-bold fs-4 text-dark">{hasRealData ? displayAverageCgpa.toFixed(2) : "—"}</div>
+                  <div className="fw-bold fs-4 text-dark">{(profile.hasActiveBacklogs && !displayAverageCgpa) ? "N/A" : (hasRealData ? displayAverageCgpa.toFixed(2) : "—")}</div>
                 </div>
               </div>
               <div className="text-muted ms-5 ps-1 db-text-xs-alt">{hasRealData ? `Across ${validSemesterGpas.length} semester${validSemesterGpas.length !== 1 ? 's' : ''}` : "No data yet"}</div>

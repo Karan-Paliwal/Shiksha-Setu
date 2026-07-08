@@ -121,6 +121,7 @@ const SkillDevHome: React.FC = () => {
   const [learningStats, setLearningStats] = useState({
     dailyLearningGoal: 60,
     todayLearningTime: 0,
+    learningStreak: 0,
   });
 
   const [savedInternships, setSavedInternships] = useState<string[]>([]);

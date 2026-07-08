@@ -15,6 +15,7 @@ interface EligibilityCriteria {
   isFirstGeneration: boolean;
   isGirlStudent: boolean;
   isSpeciallyAbled: boolean;
+  hasActiveBacklogs: boolean;
 }
 
 
@@ -35,6 +36,7 @@ const initialEligibilityCriteria: EligibilityCriteria = {
   isFirstGeneration: false,
   isGirlStudent: false,
   isSpeciallyAbled: false,
+  hasActiveBacklogs: false,
 };
 
 const formatDate = (value: string) =>
@@ -413,6 +415,15 @@ const OpportunitiesHome: React.FC = () => {
               </div>
             </div>
 
+            {criteria.hasActiveBacklogs && (
+              <div className="alert alert-warning border-0 d-flex gap-2 py-2 mb-4">
+                <i className="bi bi-exclamation-triangle-fill text-warning"></i>
+                <div className="ah-text-sm text-dark fw-medium">
+                  You have an active re-appear. Focus on clearing your backlogs to improve eligibility for top placements and scholarships.
+                </div>
+              </div>
+            )}
+
             <div className="mb-4">
               <div className="fw-medium mb-3">Confirm your details:</div>
               <div className="row g-2 mb-3">
@@ -449,6 +460,7 @@ const OpportunitiesHome: React.FC = () => {
                 ["isFirstGeneration", "First Gen Student"],
                 ["isGirlStudent", "Girl Student"],
                 ["isSpeciallyAbled", "Specially Abled"],
+                ["hasActiveBacklogs", "I have active backlogs"],
               ].map(([key, label]) => (
                 <div className="form-check mb-2" key={key}>
                   <input

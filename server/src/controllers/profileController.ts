@@ -187,7 +187,11 @@ export const setupProfile = async (req: AuthRequest, res: Response): Promise<voi
              }
              
              if (aiResult.subjects && aiResult.subjects.length > 0) {
-                user.academicProfile!.subjects = aiResult.subjects;
+                user.academicProfile!.subjects = aiResult.subjects as any;
+             }
+
+             if (aiResult.hasActiveBacklogs) {
+                user.academicProfile!.hasActiveBacklogs = true;
              }
           }
         } else if (fieldname === 'timetable') {

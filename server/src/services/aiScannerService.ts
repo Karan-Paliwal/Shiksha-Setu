@@ -15,7 +15,8 @@ export interface MarksheetAnalysisResult {
   cgpa: number | null;       // Cumulative GPA up to that semester
   creditsEarned: number | null;
   allSemesterGpas: Record<string, number> | null; // e.g. { "1": 8.2, "2": 8.6 }
-  subjects: { name: string; score: number }[] | null;
+  hasActiveBacklogs: boolean;
+  subjects: { name: string; score: number; grade: string | null; status: "Pass" | "Re-appear" | "Fail" | null }[] | null;
 }
 
 /**
@@ -79,7 +80,8 @@ RETURN ONLY this exact JSON format, no markdown, no explanation:
   "cgpa": <number or null>,
   "creditsEarned": <number or null>,
   "allSemesterGpas": <{"1": 8.2, "2": 8.6, ...} or null>,
-  "subjects": [{"name": "string", "score": <number>}]
+  "hasActiveBacklogs": <boolean>,
+  "subjects": [{"name": "string", "score": <number>, "grade": "string or null", "status": "Pass" | "Fail" | "Re-appear"}]
 }
 
 Rules:
@@ -88,7 +90,8 @@ Rules:
 - "cgpa" = the cumulative/overall GPA shown on this document
 - "creditsEarned" = credits earned for THIS specific semester only (do NOT return the cumulative/overall total credits).
 - "allSemesterGpas" = ONLY fill this if the document shows results for MORE than one semester (consolidated transcript). Map each visible semester number to its SGPA.
-- "subjects" = Extract all individual subjects listed. "score" MUST BE normalized to a 0-100 percentage scale (e.g. if the student scored 8.5/10, score=85. If 85/100, score=85).
+- "hasActiveBacklogs" = true if ANY subject has a "Re-appear", "Fail" status, "F" grade, or an asterisk (*) indicating a backlog. Otherwise false.
+- "subjects" = Extract all individual subjects listed. "score" MUST BE normalized to a 0-100 percentage scale. "grade" is the letter grade (A, B, C, F, etc.) if present. "status" must be determined as "Pass", "Fail", or "Re-appear" based on the grade or explicit text (like "Re-appear", "F", or asterisk *). If no grade is present but passing marks are met, use "Pass".
 - If a value is not clearly visible, set it to null
 - NEVER guess or invent numbers — only return what is clearly printed in the document`;
 
@@ -142,11 +145,14 @@ Rules:
       allSemesterGpas: parsed.allSemesterGpas && typeof parsed.allSemesterGpas === "object"
         ? parsed.allSemesterGpas
         : null,
+      hasActiveBacklogs: !!parsed.hasActiveBacklogs,
       subjects: Array.isArray(parsed.subjects) 
         ? parsed.subjects.map((s: any) => ({
             name: s.name ? String(s.name) : "Unknown",
-            score: Number(s.score) || 0
-          })).filter((s: any) => s.score > 0)
+            score: Number(s.score) || 0,
+            grade: s.grade ? String(s.grade) : null,
+            status: s.status === "Fail" || s.status === "Re-appear" || s.status === "Pass" ? s.status : "Pass"
+          }))
         : null,
     };
 

@@ -9,9 +9,12 @@ export interface AcademicProfile {
   highestCgpa?: number;
   averageCgpa?: number;
   semesterGpas?: number[];
+  hasActiveBacklogs?: boolean;
   subjects?: Array<{
     name: string;
     score: number;
+    grade?: string;
+    status?: "Pass" | "Fail" | "Re-appear";
   }>;
 }
 
@@ -33,6 +36,9 @@ export interface User {
   createdAt: string;
   profilePicture?: string;
   skills?: string[];
+  dailyLearningGoal?: number;
+  todayLearningTime?: number;
+  learningStreak?: number;
 }
 
 export interface AuthResponse {

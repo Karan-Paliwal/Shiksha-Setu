@@ -11,7 +11,8 @@ export interface IAcademicProfile {
   averageCgpa?: number;
   semesterGpas?: number[];
   semesterCredits?: number[];
-  subjects?: { semester?: number; name: string; score: number }[];
+  hasActiveBacklogs?: boolean;
+  subjects?: { semester?: number; name: string; score: number; grade?: string; status?: "Pass" | "Fail" | "Re-appear" }[];
 }
 
 export interface IProfileDetails {
@@ -81,11 +82,14 @@ const UserSchema = new Schema<IUser>({
     averageCgpa: { type: Number, default: 0 },
     semesterGpas: { type: [Number], default: [] },
     semesterCredits: { type: [Number], default: [] },
+    hasActiveBacklogs: { type: Boolean, default: false },
     subjects: [
       {
         semester: { type: Number, default: 1 },
         name: { type: String, required: true },
         score: { type: Number, required: true },
+        grade: { type: String },
+        status: { type: String, enum: ["Pass", "Fail", "Re-appear"], default: "Pass" }
       }
     ]
   },
