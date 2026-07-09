@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AcademicProfile, AcademicResource, AcademicTask, StudyPlan } from "../../types";
-import { createAcademicTask, createStudyPlan, getAcademicDashboard, updateAcademicTask } from "../../services/academicsService";
+import { createAcademicTask, createStudyPlan, deleteAcademicTask, getAcademicDashboard, updateAcademicTask } from "../../services/academicsService";
 import "./AcademicsHome.css";
 
 interface AcademicDashboard {
@@ -93,6 +93,15 @@ const AcademicsHome: React.FC = () => {
     setDashboard((current) =>
       current
         ? { ...current, tasks: current.tasks.map((item) => (item._id === updated._id ? updated : item)) }
+        : current
+    );
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteAcademicTask(taskId);
+    setDashboard((current) =>
+      current
+        ? { ...current, tasks: current.tasks.filter((item) => item._id !== taskId) }
         : current
     );
   };
@@ -253,18 +262,41 @@ const AcademicsHome: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-dark rounded-4 p-4 text-white d-flex justify-content-between align-items-center position-relative overflow-hidden">
-            <i className="bi bi-graph-up-arrow position-absolute opacity-25 ah-icon-xl"></i>
-            <div className="position-relative z-1 w-75">
-              <h4 className="fw-bold mb-2">Study Plans</h4>
-              <p className="mb-0 text-white-50 ah-text-base">
-                {dashboard?.studyPlans[0]?.title || "Create a focused study plan for upcoming exams and submissions."}
-              </p>
+          <div className="ah-study-plans">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+              <div>
+                <h4 className="fw-bold mb-1">Study Plans</h4>
+                <p className="mb-0 text-ss-muted ah-text-base">Build focused plans for exams, revisions, and submissions.</p>
+              </div>
+              <form className="d-flex gap-2 ah-study-plan-form" onSubmit={handleCreatePlan}>
+                <input className="form-control" placeholder="Plan title" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} />
+                <button className="btn btn-primary fw-bold" type="submit">
+                  <i className="bi bi-plus-circle me-2"></i>Add
+                </button>
+              </form>
             </div>
-            <form className="d-flex gap-2 position-relative z-1" onSubmit={handleCreatePlan}>
-              <input className="form-control" placeholder="Plan title" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} />
-              <button className="btn btn-light fw-bold text-dark" type="submit">Add</button>
-            </form>
+
+            {dashboard?.studyPlans.length ? (
+              <div className="row g-3">
+                {dashboard.studyPlans.map((plan, index) => (
+                  <div className="col-md-6" key={plan._id || `${plan.title}-${index}`}>
+                    <div className="ss-card p-3 h-100 ah-study-plan-card">
+                      <div className="d-flex align-items-start gap-3">
+                        <div className="ah-study-plan-icon">
+                          <i className="bi bi-calendar2-check"></i>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="fw-bold text-dark fs-6 text-truncate">{plan.title}</div>
+                          <div className="text-ss-muted ah-text-sm-alt">{plan.description || `Focused plan for Semester ${semester}`}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="ss-card p-4 text-ss-muted ah-text-sm">No study plans yet. Add one to keep your preparation organized.</div>
+            )}
           </div>
         </div>
 
@@ -275,15 +307,22 @@ const AcademicsHome: React.FC = () => {
             </h5>
 
             {dashboard?.tasks.length ? dashboard.tasks.map((task) => (
-              <button key={task._id} className="btn text-start w-100 p-0 mb-4" onClick={() => handleToggleTask(task)}>
-                <div className="d-flex gap-3">
-                  <i className={`bi ${task.completed ? "bi-check-circle-fill text-primary" : "bi-circle text-muted"} fs-5 mt-1`}></i>
-                  <div>
-                    <div className={`fw-bold fs-6 ${task.completed ? "text-decoration-line-through text-muted" : "text-dark"}`}>{task.title}</div>
-                    <div className="text-ss-muted ah-text-sm-alt">{task.course} | {formatDueDate(task.dueDate)}</div>
-                  </div>
-                </div>
-              </button>
+              <div key={task._id} className="ah-task-row mb-3">
+                <button className="btn text-start flex-grow-1 p-0" onClick={() => handleToggleTask(task)} type="button">
+                  <span className="d-flex gap-3">
+                    <i className={`bi ${task.completed ? "bi-check-circle-fill text-primary" : "bi-circle text-muted"} fs-5 mt-1`}></i>
+                    <span className="min-w-0">
+                      <span className={`d-block fw-bold fs-6 ${task.completed ? "text-decoration-line-through text-muted" : "text-dark"}`}>{task.title}</span>
+                      <span className="d-block text-ss-muted ah-text-sm-alt">{task.course} | {formatDueDate(task.dueDate)}</span>
+                    </span>
+                  </span>
+                </button>
+                {task.completed && (
+                  <button className="btn btn-sm btn-outline-danger ah-task-delete" type="button" onClick={() => handleDeleteTask(task._id)} aria-label={`Delete ${task.title}`}>
+                    <i className="bi bi-trash"></i>
+                  </button>
+                )}
+              </div>
             )) : (
               <p className="text-ss-muted ah-text-sm-alt">No tasks yet. Add the next thing before it vanishes from your brain.</p>
             )}

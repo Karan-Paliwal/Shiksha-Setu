@@ -28,6 +28,11 @@ export const updateAcademicTask = async (
   return response.data;
 };
 
+export const deleteAcademicTask = async (id: string) => {
+  const response = await api.delete(`/academics/tasks/${id}`);
+  return response.data;
+};
+
 export const createStudyPlan = async (payload: { title: string; description?: string }) => {
   const response = await api.post("/academics/study-plans", payload);
   return response.data;

@@ -44,6 +44,49 @@
   white-space: nowrap;
 }
 
+.ah-study-plans {
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.ah-study-plan-form {
+  min-width: min(100%, 360px);
+}
+
+.ah-study-plan-form .form-control {
+  min-width: 0;
+}
+
+.ah-study-plan-card {
+  border-color: rgba(37, 99, 235, 0.12);
+}
+
+.ah-study-plan-icon {
+  align-items: center;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 8px;
+  color: #2563eb;
+  display: flex;
+  flex: 0 0 42px;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.ah-task-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ah-task-delete {
+  flex: 0 0 34px;
+  height: 34px;
+  padding: 0;
+}
+
 .ah-question-list {
   display: grid;
   gap: 0.65rem;
@@ -76,5 +119,14 @@
 
   .ah-link-chip {
     flex: 1 1 100%;
+  }
+
+  .ah-study-plans {
+    padding: 1rem;
+  }
+
+  .ah-study-plan-form {
+    flex-direction: column;
+    width: 100%;
   }
 }
