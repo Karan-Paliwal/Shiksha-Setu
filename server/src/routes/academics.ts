@@ -6,6 +6,7 @@ const router = Router();
 
 router.get("/status", academicsController.getStatus);
 router.get("/dashboard", authMiddleware, academicsController.getDashboard);
+router.get("/pyqs", authMiddleware, academicsController.getPyqs);
 router.post("/cgpa/calculate", authMiddleware, academicsController.calculateCGPA);
 router.post("/tasks", authMiddleware, academicsController.createTask);
 router.patch("/tasks/:id", authMiddleware, academicsController.updateTask);

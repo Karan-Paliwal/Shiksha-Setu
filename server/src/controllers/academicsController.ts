@@ -25,6 +25,19 @@ export const getDashboard = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+export const getPyqs = (req: Request, res: Response): void => {
+  const { program, subject } = req.query;
+  const pyqs = academicsService.getPyqResources({
+    program: typeof program === "string" ? program : undefined,
+    subject: typeof subject === "string" ? subject : undefined,
+  });
+
+  res.status(200).json({
+    count: pyqs.length,
+    resources: pyqs,
+  });
+};
+
 export const createTask = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const task = await academicsService.createTask(req.userId!, req.body);

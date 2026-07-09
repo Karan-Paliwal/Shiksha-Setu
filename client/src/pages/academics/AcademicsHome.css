@@ -38,3 +38,43 @@
 .ah-program-select {
   width: 220px;
 }
+
+.ah-link-chip {
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.ah-question-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.ah-question-item {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding-top: 0.65rem;
+}
+
+.ah-question-item summary {
+  color: #111827;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.ah-question-item p {
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin: 0.5rem 0 0;
+}
+
+@media (max-width: 576px) {
+  .ah-program-select {
+    width: 100%;
+  }
+
+  .ah-link-chip {
+    flex: 1 1 100%;
+  }
+}

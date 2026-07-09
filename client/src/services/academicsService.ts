@@ -5,6 +5,11 @@ export const getAcademicDashboard = async () => {
   return response.data;
 };
 
+export const getPyqResources = async (params?: { program?: string; subject?: string }) => {
+  const response = await api.get("/academics/pyqs", { params });
+  return response.data;
+};
+
 export const createAcademicTask = async (payload: {
   title: string;
   course?: string;

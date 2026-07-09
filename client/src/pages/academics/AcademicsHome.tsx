@@ -6,6 +6,7 @@ import "./AcademicsHome.css";
 interface AcademicDashboard {
   academicProfile?: AcademicProfile;
   resources: AcademicResource[];
+  pyqResources: AcademicResource[];
   courseOptions: string[];
   recommendedPrograms: string[];
   userCourses: string[];
@@ -62,6 +63,15 @@ const AcademicsHome: React.FC = () => {
     if (selectedProgram === "All") return dashboard.resources;
     return dashboard.resources.filter((resource) => resource.program === selectedProgram);
   }, [dashboard, recommendedResources, selectedProgram]);
+  const filteredPyqResources = useMemo(() => {
+    if (!dashboard) return [];
+    if (selectedProgram === "Recommended") {
+      const recommendedPyqs = dashboard.pyqResources.filter((resource) => dashboard.recommendedPrograms.includes(resource.program));
+      return recommendedPyqs.length ? recommendedPyqs : dashboard.pyqResources;
+    }
+    if (selectedProgram === "All") return dashboard.pyqResources;
+    return dashboard.pyqResources.filter((resource) => resource.program === selectedProgram);
+  }, [dashboard, selectedProgram]);
 
   const handleCreateTask = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -155,7 +165,7 @@ const AcademicsHome: React.FC = () => {
         <div className="col-lg-8">
           <div className="d-flex justify-content-between align-items-center mb-3 mt-2">
             <h5 className="fw-bold mb-0 d-flex align-items-center">
-              <i className="bi bi-link-45deg text-primary me-2"></i>University Course Links
+              <i className="bi bi-link-45deg text-primary me-2"></i>Semester Syllabus & Course Links
             </h5>
             <select className="form-select form-select-sm ah-program-select" value={selectedProgram} onChange={(event) => setSelectedProgram(event.target.value)}>
               <option value="All">All Courses</option>
@@ -191,6 +201,54 @@ const AcademicsHome: React.FC = () => {
             {filteredResources.length === 0 && (
               <div className="col-12">
                 <div className="ss-card p-4 text-ss-muted ah-text-sm">No links found for this course yet.</div>
+              </div>
+            )}
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="fw-bold mb-0 d-flex align-items-center">
+              <i className="bi bi-patch-question text-primary me-2"></i>Subject-wise PYQs
+            </h5>
+            <span className="badge text-bg-light border">{filteredPyqResources.length} subjects</span>
+          </div>
+
+          <div className="row g-3 mb-4">
+            {filteredPyqResources.map((resource) => (
+              <div className="col-md-6" key={resource.id}>
+                <div className="ss-card p-3 h-100">
+                  <div className="d-flex align-items-start gap-3 mb-3">
+                    <div className="bg-warning bg-opacity-10 text-warning rounded p-3 d-flex align-items-center justify-content-center">
+                      <i className="bi bi-file-earmark-check fs-4"></i>
+                    </div>
+                    <div className="flex-grow-1">
+                      <div className="fw-bold text-dark fs-6">{resource.title}</div>
+                      <div className="text-ss-muted ah-text-xs">{resource.subject} | {resource.program}</div>
+                      <div className="text-ss-muted ah-text-xs">{resource.size}</div>
+                    </div>
+                  </div>
+
+                  <div className="d-flex flex-wrap gap-2 mb-3">
+                    {(resource.links?.length ? resource.links : [{ label: "Open PYQs", url: resource.url }]).map((link) => (
+                      <a className="btn btn-sm btn-outline-primary ah-link-chip" href={link.url} target="_blank" rel="noreferrer" key={`${resource.id}-${link.label}`}>
+                        <i className="bi bi-box-arrow-up-right me-1"></i>{link.label}
+                      </a>
+                    ))}
+                  </div>
+
+                  <div className="ah-question-list">
+                    {resource.questions?.map((item, index) => (
+                      <details className="ah-question-item" key={`${resource.id}-question-${index}`}>
+                        <summary>{item.question}</summary>
+                        <p>{item.answer}</p>
+                      </details>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filteredPyqResources.length === 0 && (
+              <div className="col-12">
+                <div className="ss-card p-4 text-ss-muted ah-text-sm">No PYQs found for this course yet.</div>
               </div>
             )}
           </div>

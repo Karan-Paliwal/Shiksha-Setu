@@ -192,6 +192,209 @@ const defaultResources = [
   },
 ];
 
+const pyqResources = [
+  {
+    id: "cse-os-pyq",
+    program: "Computer Science",
+    subject: "Operating Systems",
+    title: "Operating Systems PYQs",
+    university: "Subject Question Bank",
+    type: "PYQ",
+    size: "Previous papers + important questions",
+    url: "https://www.google.com/search?q=operating+systems+previous+year+question+paper+BTech+pdf",
+    links: [
+      { label: "Find university papers", url: "https://www.google.com/search?q=operating+systems+previous+year+question+paper+BTech+pdf" },
+      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=operating%20systems" },
+      { label: "Syllabus reference", url: "https://www.google.com/search?q=operating+systems+BTech+syllabus+pdf" }
+    ],
+    questions: [
+      {
+        question: "Explain process synchronization and the critical section problem.",
+        answer: "Define race condition, critical section, entry/exit sections, and describe mutual exclusion, progress, and bounded waiting."
+      },
+      {
+        question: "Compare paging and segmentation.",
+        answer: "Paging divides memory into fixed-size pages, while segmentation divides programs into logical variable-size segments such as code, stack, and data."
+      }
+    ],
+  },
+  {
+    id: "cse-dsa-pyq",
+    program: "Computer Science",
+    subject: "Data Structures",
+    title: "Data Structures PYQs",
+    university: "Subject Question Bank",
+    type: "PYQ",
+    size: "Trees, graphs, sorting, hashing",
+    url: "https://www.google.com/search?q=data+structures+previous+year+question+paper+BTech+pdf",
+    links: [
+      { label: "Find university papers", url: "https://www.google.com/search?q=data+structures+previous+year+question+paper+BTech+pdf" },
+      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=data%20structures%20algorithms" },
+      { label: "Syllabus reference", url: "https://www.google.com/search?q=data+structures+BTech+syllabus+pdf" }
+    ],
+    questions: [
+      {
+        question: "Write an algorithm for binary search and analyze its complexity.",
+        answer: "Binary search repeatedly halves a sorted search space. Its time complexity is O(log n), with O(1) iterative space."
+      },
+      {
+        question: "Differentiate between BFS and DFS.",
+        answer: "BFS explores level by level using a queue. DFS explores deeply before backtracking, commonly using recursion or a stack."
+      }
+    ],
+  },
+  {
+    id: "cse-dbms-pyq",
+    program: "Computer Science",
+    subject: "DBMS",
+    title: "DBMS PYQs",
+    university: "Subject Question Bank",
+    type: "PYQ",
+    size: "ER model, SQL, normalization",
+    url: "https://www.google.com/search?q=database+management+system+previous+year+question+paper+BTech+pdf",
+    links: [
+      { label: "Find university papers", url: "https://www.google.com/search?q=database+management+system+previous+year+question+paper+BTech+pdf" },
+      { label: "MIT OCW notes", url: "https://ocw.mit.edu/search/?q=database%20systems" },
+      { label: "Syllabus reference", url: "https://www.google.com/search?q=database+management+system+BTech+syllabus+pdf" }
+    ],
+    questions: [
+      {
+        question: "Explain normalization and the need for 3NF.",
+        answer: "Normalization reduces redundancy and update anomalies. 3NF removes transitive dependency for non-prime attributes."
+      },
+      {
+        question: "What is a transaction? Explain ACID properties.",
+        answer: "A transaction is a logical unit of work. ACID means atomicity, consistency, isolation, and durability."
+      }
+    ],
+  },
+  {
+    id: "ece-signals-pyq",
+    program: "Electronics and Communication",
+    subject: "Signals and Systems",
+    title: "Signals and Systems PYQs",
+    university: "Subject Question Bank",
+    type: "PYQ",
+    size: "Transforms, convolution, LTI systems",
+    url: "https://www.google.com/search?q=signals+and+systems+previous+year+question+paper+BTech+pdf",
+    links: [
+      { label: "Find university papers", url: "https://www.google.com/search?q=signals+and+systems+previous+year+question+paper+BTech+pdf" },
+      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=signals%20and%20systems" },
+      { label: "Syllabus reference", url: "https://www.google.com/search?q=signals+and+systems+BTech+syllabus+pdf" }
+    ],
+    questions: [
+      {
+        question: "State and prove the convolution property of Fourier Transform.",
+        answer: "Show that convolution in time maps to multiplication in frequency, using the Fourier integral definition and variable substitution."
+      },
+      {
+        question: "Check whether a given system is linear and time invariant.",
+        answer: "Test additivity and homogeneity for linearity, then shift the input and verify the output shifts identically for time invariance."
+      }
+    ],
+  },
+  {
+    id: "ee-power-pyq",
+    program: "Electrical Engineering",
+    subject: "Power Systems",
+    title: "Power Systems PYQs",
+    university: "Subject Question Bank",
+    type: "PYQ",
+    size: "Load flow, faults, protection",
+    url: "https://www.google.com/search?q=power+systems+previous+year+question+paper+BTech+pdf",
+    links: [
+      { label: "Find university papers", url: "https://www.google.com/search?q=power+systems+previous+year+question+paper+BTech+pdf" },
+      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=power%20systems" },
+      { label: "Syllabus reference", url: "https://www.google.com/search?q=power+systems+BTech+syllabus+pdf" }
+    ],
+    questions: [
+      {
+        question: "Explain per unit system and its advantages.",
+        answer: "Per unit normalizes electrical quantities against base values, simplifying transformer and network calculations."
+      },
+      {
+        question: "Compare symmetrical and unsymmetrical faults.",
+        answer: "Symmetrical faults affect all phases equally. Unsymmetrical faults affect one or two phases and require sequence component analysis."
+      }
+    ],
+  },
+  {
+    id: "mech-thermo-pyq",
+    program: "Mechanical Engineering",
+    subject: "Thermodynamics",
+    title: "Thermodynamics PYQs",
+    university: "Subject Question Bank",
+    type: "PYQ",
+    size: "Laws, cycles, entropy",
+    url: "https://www.google.com/search?q=thermodynamics+previous+year+question+paper+BTech+pdf",
+    links: [
+      { label: "Find university papers", url: "https://www.google.com/search?q=thermodynamics+previous+year+question+paper+BTech+pdf" },
+      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=thermodynamics" },
+      { label: "Syllabus reference", url: "https://www.google.com/search?q=thermodynamics+BTech+syllabus+pdf" }
+    ],
+    questions: [
+      {
+        question: "State the first law of thermodynamics for a closed system.",
+        answer: "The change in internal energy equals heat added to the system minus work done by the system."
+      },
+      {
+        question: "Derive efficiency of the Carnot cycle.",
+        answer: "Carnot efficiency depends only on reservoir temperatures and is given by 1 - Tc/Th, with temperatures in Kelvin."
+      }
+    ],
+  },
+  {
+    id: "civil-structures-pyq",
+    program: "Civil Engineering",
+    subject: "Structural Analysis",
+    title: "Structural Analysis PYQs",
+    university: "Subject Question Bank",
+    type: "PYQ",
+    size: "Beams, trusses, influence lines",
+    url: "https://www.google.com/search?q=structural+analysis+previous+year+question+paper+BTech+pdf",
+    links: [
+      { label: "Find university papers", url: "https://www.google.com/search?q=structural+analysis+previous+year+question+paper+BTech+pdf" },
+      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=structural%20analysis" },
+      { label: "Syllabus reference", url: "https://www.google.com/search?q=structural+analysis+BTech+syllabus+pdf" }
+    ],
+    questions: [
+      {
+        question: "Draw shear force and bending moment diagrams for a simply supported beam.",
+        answer: "Calculate reactions first, then evaluate shear and moment across each span using equilibrium equations."
+      },
+      {
+        question: "Differentiate determinate and indeterminate structures.",
+        answer: "Determinate structures are solved using equilibrium alone. Indeterminate structures require compatibility and material relations."
+      }
+    ],
+  },
+  {
+    id: "bsc-math-pyq",
+    program: "BSc",
+    subject: "Mathematics",
+    title: "Mathematics PYQs",
+    university: "Subject Question Bank",
+    type: "PYQ",
+    size: "Calculus, algebra, differential equations",
+    url: "https://www.google.com/search?q=calculus+linear+algebra+previous+year+question+paper+BSc+pdf",
+    links: [
+      { label: "Find university papers", url: "https://www.google.com/search?q=calculus+linear+algebra+previous+year+question+paper+BSc+pdf" },
+      { label: "SWAYAM practice", url: "https://swayam.gov.in/explorer?searchText=calculus%20linear%20algebra" },
+      { label: "Syllabus reference", url: "https://www.google.com/search?q=calculus+linear+algebra+BSc+syllabus+pdf" }
+    ],
+    questions: [
+      {
+        question: "Find eigenvalues and eigenvectors of a 2x2 matrix.",
+        answer: "Solve det(A - lambda I) = 0 for eigenvalues, then solve (A - lambda I)x = 0 for each eigenvector."
+      },
+      {
+        question: "State Rolle's theorem with conditions.",
+        answer: "A function continuous on [a,b], differentiable on (a,b), and satisfying f(a)=f(b) has some c where f'(c)=0."
+      }
+    ],
+  },
+];
+
 const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 const programAliases: Record<string, string[]> = {
@@ -217,6 +420,17 @@ const inferProgramsFromCourses = (courseNames: string[]) => {
     .map(([program]) => program);
 };
 
+export const getPyqResources = (filters: { program?: string; subject?: string } = {}) => {
+  const programFilter = filters.program ? normalize(filters.program) : "";
+  const subjectFilter = filters.subject ? normalize(filters.subject) : "";
+
+  return pyqResources.filter((resource) => {
+    const programMatches = !programFilter || normalize(resource.program).includes(programFilter);
+    const subjectMatches = !subjectFilter || normalize(resource.subject).includes(subjectFilter);
+    return programMatches && subjectMatches;
+  });
+};
+
 export const getDashboard = async (userId: string) => {
   const [user, tasks, studyPlans, schedule] = await Promise.all([
     User.findById(userId).select("academicProfile documents name email"),
@@ -232,6 +446,7 @@ export const getDashboard = async (userId: string) => {
     academicProfile: user?.academicProfile,
     documents: user?.documents,
     resources: defaultResources,
+    pyqResources: getPyqResources(),
     courseOptions: Array.from(new Set(defaultResources.map((resource) => resource.program))).sort(),
     recommendedPrograms,
     userCourses: classNames,

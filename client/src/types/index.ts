@@ -89,6 +89,14 @@ export interface AcademicResource {
   type: string;
   size: string;
   url: string;
+  links?: Array<{
+    label: string;
+    url: string;
+  }>;
+  questions?: Array<{
+    question: string;
+    answer: string;
+  }>;
 }
 
 // ─── Opportunity Types ───────────────────────────────────
