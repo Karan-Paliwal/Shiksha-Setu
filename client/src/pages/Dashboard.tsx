@@ -88,6 +88,18 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteSchedule = async (index: number) => {
+    const updatedClasses = schedule.filter((_, idx) => idx !== index);
+    try {
+      const response = await api.post("/schedule/save", { classes: updatedClasses });
+      if (response.data && response.data.schedule) {
+        setSchedule(response.data.schedule.classes);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
   // ── Real data only — no hardcoded defaults ──────────────────────────────────
   const profile = academicProfile || user?.academicProfile || {};
   const currentCgpa = profile.currentCgpa || 0;
@@ -469,6 +481,7 @@ const Dashboard: React.FC = () => {
                     <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Day</th>
                     <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Time</th>
                     <th className="text-secondary fw-medium border-0 pb-3 db-text-sm">Location</th>
+                    <th className="text-secondary fw-medium border-0 pb-3 db-text-sm text-end">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -489,6 +502,16 @@ const Dashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="text-secondary py-3">{cls.location || "TBA"}</td>
+                      <td className="text-end py-3">
+                        <button
+                          className="btn btn-sm btn-outline-danger rounded-circle p-1 d-inline-flex align-items-center justify-content-center"
+                          style={{ width: '28px', height: '28px' }}
+                          onClick={() => handleDeleteSchedule(idx)}
+                          title="Delete Schedule"
+                        >
+                          <i className="bi bi-x fs-5"></i>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

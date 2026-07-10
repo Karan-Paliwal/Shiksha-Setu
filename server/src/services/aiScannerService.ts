@@ -91,9 +91,9 @@ Rules:
 - "creditsEarned" = credits earned for THIS specific semester only (do NOT return the cumulative/overall total credits).
 - "allSemesterGpas" = ONLY fill this if the document shows results for MORE than one semester (consolidated transcript). Map each visible semester number to its SGPA.
 - "hasActiveBacklogs" = true if ANY subject has a "Re-appear", "Fail" status, "F" grade, or an asterisk (*) indicating a backlog. Otherwise false.
-- "subjects" = Extract all individual subjects listed. "score" MUST BE normalized to a 0-100 percentage scale. "grade" is the letter grade (A, B, C, F, etc.) if present. "status" must be determined as "Pass", "Fail", or "Re-appear" based on the grade or explicit text (like "Re-appear", "F", or asterisk *). If no grade is present but passing marks are met, use "Pass".
+- "subjects" = Extract all individual subjects listed. "score" should be the raw numeric marks obtained for the subject (e.g., out of 100). Do NOT extract "Grade Points" (Credits × Grade) or "Credit Points" as the score! If only a letter grade is present and no raw marks, set score to 0. "grade" is the letter grade (O, A+, A, B, C, F, etc.) if present. "status" must be determined as "Pass", "Fail", or "Re-appear" based on the grade or explicit text (like "Re-appear", "F", or asterisk *). If no grade is present but passing marks are met, use "Pass".
 - If a value is not clearly visible, set it to null
-- NEVER guess or invent numbers — only return what is clearly printed in the document`;
+- Extract exactly what is printed in the document for scores. Do not mistake credits for scores.`;
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 

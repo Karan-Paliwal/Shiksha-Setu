@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "./ProfileHome.css";
 import { useAuth } from "../../hooks/useAuth";
+import { useTheme } from "../../context/ThemeContext";
 import { getProfile, saveProfile, clearMarksheets } from "../../services/profileService";
 import api from "../../services/api";
 
 const ProfileHome: React.FC = () => {
   const { user, updateUser } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
 
@@ -292,13 +294,23 @@ const ProfileHome: React.FC = () => {
           <h1 className="fw-bold text-ss-bright fs-3 mb-1">My Profile</h1>
           <p className="text-ss-muted mb-0 fs-6">Manage your academic details and documents.</p>
         </div>
-        <button onClick={handleSave} className="btn btn-ss-primary px-4 shadow-sm d-flex align-items-center gap-2" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...</>
-          ) : (
-            <><i className="bi bi-floppy"></i> Save Profile</>
-          )}
-        </button>
+        <div className="d-flex align-items-center gap-3">
+          <button 
+            onClick={toggleTheme} 
+            className={`btn rounded-circle d-flex align-items-center justify-content-center shadow-sm border ${theme === 'dark' ? 'btn-dark border-secondary' : 'btn-light border-light'}`}
+            style={{ width: '42px', height: '42px', transition: 'all 0.3s ease' }} 
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? <i className="bi bi-sun-fill text-warning fs-5"></i> : <i className="bi bi-moon-stars-fill text-primary fs-5"></i>}
+          </button>
+          <button onClick={handleSave} className="btn btn-ss-primary px-4 shadow-sm d-flex align-items-center gap-2" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...</>
+            ) : (
+              <><i className="bi bi-floppy"></i> Save Profile</>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="glass-panel p-4 rounded-4 mb-5 shadow-sm d-flex flex-column flex-md-row align-items-center gap-4">
@@ -465,7 +477,7 @@ const ProfileHome: React.FC = () => {
                       <span>Semester {sem} Marksheet</span>
                       {formData.marksheets[sem] && <i className="bi bi-check-circle-fill text-success"></i>}
                     </label>
-                    <div className={`border border-2 border-dashed rounded-4 p-3 text-center cursor-pointer transition hover-shadow bg-white ${formData.marksheets[sem] ? 'border-success' : 'border-primary border-opacity-50'}`} onClick={() => document.getElementById(`marksheetUpload${sem}`)?.click()}>
+                    <div className={`border border-2 border-dashed rounded-4 p-3 text-center cursor-pointer transition hover-shadow ${theme === 'dark' ? 'bg-dark' : 'bg-white'} ${formData.marksheets[sem] ? 'border-success' : 'border-primary border-opacity-50'}`} onClick={() => document.getElementById(`marksheetUpload${sem}`)?.click()}>
                       <input
                         type="file"
                         id={`marksheetUpload${sem}`}
@@ -474,7 +486,7 @@ const ProfileHome: React.FC = () => {
                         onChange={(e) => handleMarksheetChange(e, sem)}
                       />
                       <i className={`bi ${formData.marksheets[sem] ? 'bi-file-earmark-check text-success' : 'bi-cloud-arrow-up text-primary'} fs-3 mb-1`}></i>
-                      <h6 className="fw-bold text-dark mb-1 fs-6">{formData.marksheets[sem] ? formData.marksheets[sem]?.name : `Upload Sem ${sem} Marksheet`}</h6>
+                      <h6 className={`fw-bold mb-1 fs-6 ${theme === 'dark' ? 'text-light' : 'text-dark'}`}>{formData.marksheets[sem] ? 'Marksheet Uploaded' : `Upload Sem ${sem} Marksheet`}</h6>
                       {!formData.marksheets[sem] && <p className="text-muted mb-0 ph-text-xxs"> JPG, PNG (Max 5MB)</p>}
                     </div>
                   </div>

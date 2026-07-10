@@ -8,12 +8,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis
+  ResponsiveContainer
 } from "recharts";
 
 import "./DetailedAnalytics.css";
@@ -56,21 +51,60 @@ const DetailedAnalytics: React.FC = () => {
   const lowestSgpa = Math.min(...semesterGpas);
   const criticalSemIndex = semesterGpas.indexOf(lowestSgpa);
 
-  // Group subjects by semester
-  const subjectsBySemester: Record<number, any[]> = {};
-  if (profile.subjects && profile.subjects.length > 0) {
-    profile.subjects.forEach((sub: any) => {
-      const sem = sub.semester || 1;
-      if (!subjectsBySemester[sem]) subjectsBySemester[sem] = [];
-      subjectsBySemester[sem].push({
-        subject: sub.name,
-        A: sub.score,
-        fullMark: 100
-      });
-    });
-  }
+  // Placement Readiness Logic
+  const getPlacementTier = (cgpa: number, backlogs: boolean) => {
+    if (cgpa >= 8.5 && !backlogs) return {
+      tier: "Super Dream (FAANG / Top Tech)",
+      color: "text-success",
+      bg: "bg-success",
+      companies: "Google, Microsoft, Amazon, Atlassian, DE Shaw",
+      advice: [
+        "Master Advanced Data Structures & Algorithms (Graphs, DP, Trees)",
+        "Build 2-3 complex full-stack/system design projects",
+        "Participate heavily in LeetCode/Codeforces contests",
+        "Prepare for Low-Level and High-Level System Design rounds"
+      ]
+    };
+    if (cgpa >= 7.5 && !backlogs) return {
+      tier: "Dream (Top Startups & Mid-Tier)",
+      color: "text-primary",
+      bg: "bg-primary",
+      companies: "Paytm, Swiggy, Zomato, Oracle, Cisco",
+      advice: [
+        "Ensure strong fundamentals in DSA (Arrays, Strings, Linked Lists)",
+        "Have 1-2 solid projects using modern frameworks (React, Node.js)",
+        "Focus on Core CS subjects (OS, DBMS, Computer Networks)",
+        "Target maintaining CGPA above 8.0 for safety"
+      ]
+    };
+    if (cgpa >= 6.5) return {
+      tier: "Mass Recruiters & IT Services",
+      color: "text-warning",
+      bg: "bg-warning",
+      companies: "TCS, Infosys, Wipro, Cognizant, Accenture",
+      advice: [
+        "Focus on Quantitative Aptitude & Logical Reasoning",
+        "Clear basic programming concepts in Java/C++/Python",
+        "Clear any active backlogs immediately before placement season",
+        "Work on pushing CGPA above 7.5 to unlock more opportunities"
+      ]
+    };
+    return {
+      tier: "Needs Improvement",
+      color: "text-danger",
+      bg: "bg-danger",
+      companies: "Currently ineligible for most on-campus drives",
+      advice: [
+        "PRIORITY 1: Clear all active backlogs",
+        "Focus on improving CGPA to at least 6.5 minimum",
+        "Start with basic programming logic and syntax",
+        "Seek peer tutoring or extra classes for weak subjects"
+      ]
+    };
+  };
 
-
+  const hasBacklogs = (profile as any).hasActiveBacklogs || false;
+  const placementData = getPlacementTier(currentCgpa, hasBacklogs);
 
   const uploadedMarksheetsCount = profile.semesterGpas ? profile.semesterGpas.filter(g => g > 0).length : 0;
   const remainingSemesters = Math.max(0, 8 - uploadedMarksheetsCount);
@@ -147,11 +181,11 @@ const DetailedAnalytics: React.FC = () => {
             <div className="flex-grow-1 mt-2" style={{ minHeight: '300px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6c757d', fontSize: 12}} dy={10} />
-                  <YAxis domain={[0, 10]} axisLine={false} tickLine={false} tick={{fill: '#6c757d', fontSize: 12}} dx={-10} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ss-border)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--ss-text-muted)', fontSize: 12}} dy={10} />
+                  <YAxis domain={[0, 10]} axisLine={false} tickLine={false} tick={{fill: 'var(--ss-text-muted)', fontSize: 12}} dx={-10} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                    contentStyle={{ backgroundColor: 'var(--ss-bg-card)', color: 'var(--ss-text-bright)', borderRadius: '8px', border: '1px solid var(--ss-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                     itemStyle={{ color: '#198754', fontWeight: 'bold' }}
                   />
                   <Line 
@@ -223,46 +257,52 @@ const DetailedAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Subject Performance Radar Charts */}
-      {Object.keys(subjectsBySemester).length > 0 && (
-        <div className="mt-5">
-          <div className="d-flex align-items-center mb-4">
-            <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
-              <i className="bi bi-radar"></i>
-            </div>
-            <h4 className="fw-bold text-dark mb-0">Semester-wise Subject Performance</h4>
+      {/* Placement Readiness Tracker */}
+      <div className="mt-5">
+        <div className="d-flex align-items-center mb-4">
+          <div className={`bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3 ${placementData.bg} ${placementData.color}`} style={{ width: '40px', height: '40px' }}>
+            <i className="bi bi-briefcase-fill"></i>
           </div>
-          
-          <div className="row g-4">
-            {Object.keys(subjectsBySemester).map(sem => (
-              <div className="col-md-6 col-lg-4" key={sem}>
-                <div className="analytics-card p-4 rounded-4 h-100 d-flex flex-column align-items-center bg-white border shadow-sm transition hover-shadow">
-                  <h6 className="fw-bold text-secondary mb-3 text-uppercase letter-spacing-1">Semester {sem}</h6>
-                  <div style={{ width: '100%', height: '250px' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={subjectsBySemester[Number(sem)]}>
-                        <PolarGrid stroke="#e9ecef" />
-                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#495057', fontSize: 10, fontWeight: 600 }} />
-                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                        <Radar
-                          name={`Semester ${sem}`}
-                          dataKey="A"
-                          stroke="#2563eb"
-                          fill="#3b82f6"
-                          fillOpacity={0.5}
-                        />
-                        <Tooltip 
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                        />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
+          <h4 className="fw-bold text-dark mb-0">Career & Placement Readiness</h4>
+        </div>
+        
+        <div className="analytics-card p-4 rounded-4 border shadow-sm">
+          <div className="row g-4 align-items-center">
+            <div className="col-md-5" style={{ borderRight: '1px solid var(--ss-border)' }}>
+              <h6 className="text-muted text-uppercase small fw-bold letter-spacing-1 mb-2">Current Eligibility Tier</h6>
+              <h3 className={`fw-bold mb-3 ${placementData.color}`}>{placementData.tier}</h3>
+              
+              <div className="mb-3">
+                <span className="text-muted small d-block mb-1">Target Companies:</span>
+                <span className="fw-semibold text-dark">{placementData.companies}</span>
+              </div>
+              
+              <div className="d-flex align-items-center gap-3 mt-4">
+                <div className="text-center">
+                  <div className="h4 fw-bold text-dark mb-0">{currentCgpa.toFixed(2)}</div>
+                  <div className="text-muted small">CGPA</div>
+                </div>
+                <div className="text-center border-start ps-3">
+                  <div className={`h4 fw-bold mb-0 ${hasBacklogs ? 'text-danger' : 'text-success'}`}>{hasBacklogs ? 'Yes' : '0'}</div>
+                  <div className="text-muted small">Active Backlogs</div>
                 </div>
               </div>
-            ))}
+            </div>
+            
+            <div className="col-md-7 ps-md-4">
+              <h6 className="fw-bold text-dark mb-3">Actionable Roadmap to Top Tech</h6>
+              <ul className="list-unstyled mb-0">
+                {placementData.advice.map((tip, idx) => (
+                  <li key={idx} className="d-flex mb-3 align-items-start">
+                    <i className={`bi bi-check-circle-fill me-3 mt-1 ${placementData.color}`}></i>
+                    <span className="text-secondary">{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
     </div>
   );
