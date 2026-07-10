@@ -30,7 +30,7 @@
 }
 
 .ai-chat-bg {
-  background-color: #fafbfc;
+  background-color: var(--ss-bg-input);
 }
 
 .ai-icon-lg {
@@ -105,7 +105,7 @@
 
 /* Premium styling overrides */
 .hover-bg-light:hover {
-  background-color: #f3f4f6 !important;
+  background-color: var(--ss-bg-input) !important;
 }
 
 .cursor-pointer {
@@ -121,8 +121,8 @@
 }
 
 .ai-input-wrapper {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--ss-bg-card);
+  border: 1px solid var(--ss-border);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -189,8 +189,8 @@
 
 /* Cyber card styled empty state */
 .ai-cyber-welcome-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%) !important;
-  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  background: var(--ss-bg-card) !important;
+  border: 1px solid var(--ss-border) !important;
   border-radius: 1.5rem !important;
   padding: 2.5rem !important;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03) !important;
