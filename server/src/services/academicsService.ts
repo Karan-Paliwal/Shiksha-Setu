@@ -31,24 +31,24 @@ export const calculateCGPA = (grades: number[]) => {
 
 const defaultResources = [
   {
-    id: "cse-nptel-os",
+    id: "cse-swayam-os",
     program: "Computer Science",
     title: "Operating Systems",
     subject: "Operating Systems",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Notes",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=operating%20systems",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "Course outline + resources",
+    url: "https://swayam.gov.in/explorer?searchText=operating%20systems",
   },
   {
-    id: "cse-nptel-dsa",
+    id: "cse-swayam-dsa",
     program: "Computer Science",
     title: "Data Structures and Algorithms",
     subject: "Data Structures",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Assignments",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=data%20structures%20algorithms",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "Course outline + resources",
+    url: "https://swayam.gov.in/explorer?searchText=data%20structures%20algorithms",
   },
   {
     id: "cse-mit-db",
@@ -61,44 +61,44 @@ const defaultResources = [
     url: "https://ocw.mit.edu/search/?q=database%20systems",
   },
   {
-    id: "ece-nptel-signals",
+    id: "ece-swayam-signals",
     program: "Electronics and Communication",
     title: "Signals and Systems",
     subject: "Signals",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Notes",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=signals%20and%20systems",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "Course outline + resources",
+    url: "https://swayam.gov.in/explorer?searchText=signals%20and%20systems",
   },
   {
-    id: "ece-nptel-analog",
+    id: "ece-swayam-analog",
     program: "Electronics and Communication",
     title: "Analog Electronics",
     subject: "Analog Circuits",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Assignments",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=analog%20electronics",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "Course outline + resources",
+    url: "https://swayam.gov.in/explorer?searchText=analog%20electronics",
   },
   {
-    id: "ee-nptel-power",
+    id: "ee-swayam-power",
     program: "Electrical Engineering",
     title: "Power Systems",
     subject: "Power Engineering",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Notes",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=power%20systems",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "Course outline + resources",
+    url: "https://swayam.gov.in/explorer?searchText=power%20systems",
   },
   {
-    id: "mech-nptel-thermo",
+    id: "mech-swayam-thermo",
     program: "Mechanical Engineering",
     title: "Thermodynamics",
     subject: "Thermodynamics",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Assignments",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=thermodynamics",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "Course outline + resources",
+    url: "https://swayam.gov.in/explorer?searchText=thermodynamics",
   },
   {
     id: "mech-mit-fluid",
@@ -111,24 +111,24 @@ const defaultResources = [
     url: "https://ocw.mit.edu/search/?q=fluid%20mechanics",
   },
   {
-    id: "civil-nptel-structures",
+    id: "civil-swayam-structures",
     program: "Civil Engineering",
     title: "Structural Analysis",
     subject: "Structures",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Notes",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=structural%20analysis",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "Course outline + resources",
+    url: "https://swayam.gov.in/explorer?searchText=structural%20analysis",
   },
   {
-    id: "civil-nptel-transport",
+    id: "civil-swayam-transport",
     program: "Civil Engineering",
     title: "Transportation Engineering",
     subject: "Transportation",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Assignments",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=transportation%20engineering",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "Course outline + resources",
+    url: "https://swayam.gov.in/explorer?searchText=transportation%20engineering",
   },
   {
     id: "bca-swayam-programming",
@@ -141,14 +141,14 @@ const defaultResources = [
     url: "https://swayam.gov.in/explorer?searchText=programming",
   },
   {
-    id: "mca-nptel-cloud",
+    id: "mca-swayam-cloud",
     program: "MCA",
     title: "Cloud Computing",
     subject: "Cloud Computing",
-    university: "NPTEL",
-    type: "Course",
-    size: "Video + Certificate",
-    url: "https://onlinecourses.nptel.ac.in/explorer?searchText=cloud%20computing",
+    university: "SWAYAM",
+    type: "Syllabus",
+    size: "MOOC",
+    url: "https://swayam.gov.in/explorer?searchText=cloud%20computing",
   },
   {
     id: "bba-swayam-management",
@@ -201,11 +201,9 @@ const pyqResources = [
     university: "Subject Question Bank",
     type: "PYQ",
     size: "Previous papers + important questions",
-    url: "https://www.google.com/search?q=operating+systems+previous+year+question+paper+BTech+pdf",
+    url: "https://drive.google.com/file/d/1XKLU6ZOPrkcdNl_TrwSq_aQuU0Y5tx_g/view?usp=drivesdk",
     links: [
-      { label: "Find university papers", url: "https://www.google.com/search?q=operating+systems+previous+year+question+paper+BTech+pdf" },
-      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=operating%20systems" },
-      { label: "Syllabus reference", url: "https://www.google.com/search?q=operating+systems+BTech+syllabus+pdf" }
+      { label: "Open PYQs", url: "https://drive.google.com/file/d/1XKLU6ZOPrkcdNl_TrwSq_aQuU0Y5tx_g/view?usp=drivesdk" }
     ],
     questions: [
       {
@@ -226,11 +224,9 @@ const pyqResources = [
     university: "Subject Question Bank",
     type: "PYQ",
     size: "Trees, graphs, sorting, hashing",
-    url: "https://www.google.com/search?q=data+structures+previous+year+question+paper+BTech+pdf",
+    url: "https://drive.google.com/file/d/1VkShgKsNb0u1ozwAaoEU-7W4W7qaYZO4/view?usp=drivesdk",
     links: [
-      { label: "Find university papers", url: "https://www.google.com/search?q=data+structures+previous+year+question+paper+BTech+pdf" },
-      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=data%20structures%20algorithms" },
-      { label: "Syllabus reference", url: "https://www.google.com/search?q=data+structures+BTech+syllabus+pdf" }
+      { label: "Open PYQs", url: "https://drive.google.com/file/d/1VkShgKsNb0u1ozwAaoEU-7W4W7qaYZO4/view?usp=drivesdk" }
     ],
     questions: [
       {
@@ -251,11 +247,9 @@ const pyqResources = [
     university: "Subject Question Bank",
     type: "PYQ",
     size: "ER model, SQL, normalization",
-    url: "https://www.google.com/search?q=database+management+system+previous+year+question+paper+BTech+pdf",
+    url: "https://drive.google.com/file/d/1BYPFfewbM-G4LopYudzzguGAQcLkxGNu/view?usp=drivesdk",
     links: [
-      { label: "Find university papers", url: "https://www.google.com/search?q=database+management+system+previous+year+question+paper+BTech+pdf" },
-      { label: "MIT OCW notes", url: "https://ocw.mit.edu/search/?q=database%20systems" },
-      { label: "Syllabus reference", url: "https://www.google.com/search?q=database+management+system+BTech+syllabus+pdf" }
+      { label: "Open PYQs", url: "https://drive.google.com/file/d/1BYPFfewbM-G4LopYudzzguGAQcLkxGNu/view?usp=drivesdk" }
     ],
     questions: [
       {
@@ -276,11 +270,9 @@ const pyqResources = [
     university: "Subject Question Bank",
     type: "PYQ",
     size: "Transforms, convolution, LTI systems",
-    url: "https://www.google.com/search?q=signals+and+systems+previous+year+question+paper+BTech+pdf",
+    url: "https://drive.google.com/file/d/1T9fTfstvJdsyjEDsvPvXBpZJoyi2u-V7/view?usp=drivesdk",
     links: [
-      { label: "Find university papers", url: "https://www.google.com/search?q=signals+and+systems+previous+year+question+paper+BTech+pdf" },
-      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=signals%20and%20systems" },
-      { label: "Syllabus reference", url: "https://www.google.com/search?q=signals+and+systems+BTech+syllabus+pdf" }
+      { label: "Open PYQs", url: "https://drive.google.com/file/d/1T9fTfstvJdsyjEDsvPvXBpZJoyi2u-V7/view?usp=drivesdk" }
     ],
     questions: [
       {
@@ -303,9 +295,7 @@ const pyqResources = [
     size: "Load flow, faults, protection",
     url: "https://www.google.com/search?q=power+systems+previous+year+question+paper+BTech+pdf",
     links: [
-      { label: "Find university papers", url: "https://www.google.com/search?q=power+systems+previous+year+question+paper+BTech+pdf" },
-      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=power%20systems" },
-      { label: "Syllabus reference", url: "https://www.google.com/search?q=power+systems+BTech+syllabus+pdf" }
+      { label: "Open PYQs", url: "https://www.google.com/search?q=power+systems+previous+year+question+paper+BTech+pdf" }
     ],
     questions: [
       {
@@ -326,11 +316,9 @@ const pyqResources = [
     university: "Subject Question Bank",
     type: "PYQ",
     size: "Laws, cycles, entropy",
-    url: "https://www.google.com/search?q=thermodynamics+previous+year+question+paper+BTech+pdf",
+    url: "https://drive.google.com/file/d/1jXzGqRPWDMFlJi5sTriEWuzs28MM_Nre/view?usp=drivesdk",
     links: [
-      { label: "Find university papers", url: "https://www.google.com/search?q=thermodynamics+previous+year+question+paper+BTech+pdf" },
-      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=thermodynamics" },
-      { label: "Syllabus reference", url: "https://www.google.com/search?q=thermodynamics+BTech+syllabus+pdf" }
+      { label: "Open PYQs", url: "https://drive.google.com/file/d/1jXzGqRPWDMFlJi5sTriEWuzs28MM_Nre/view?usp=drivesdk" }
     ],
     questions: [
       {
@@ -351,11 +339,9 @@ const pyqResources = [
     university: "Subject Question Bank",
     type: "PYQ",
     size: "Beams, trusses, influence lines",
-    url: "https://www.google.com/search?q=structural+analysis+previous+year+question+paper+BTech+pdf",
+    url: "https://drive.google.com/file/d/1A-69VGWsc3fmxeSCiRj1AFpOsDyj_XZ4/view?usp=drivesdk",
     links: [
-      { label: "Find university papers", url: "https://www.google.com/search?q=structural+analysis+previous+year+question+paper+BTech+pdf" },
-      { label: "NPTEL practice", url: "https://onlinecourses.nptel.ac.in/explorer?searchText=structural%20analysis" },
-      { label: "Syllabus reference", url: "https://www.google.com/search?q=structural+analysis+BTech+syllabus+pdf" }
+      { label: "Open PYQs", url: "https://drive.google.com/file/d/1A-69VGWsc3fmxeSCiRj1AFpOsDyj_XZ4/view?usp=drivesdk" }
     ],
     questions: [
       {
@@ -378,9 +364,7 @@ const pyqResources = [
     size: "Calculus, algebra, differential equations",
     url: "https://www.google.com/search?q=calculus+linear+algebra+previous+year+question+paper+BSc+pdf",
     links: [
-      { label: "Find university papers", url: "https://www.google.com/search?q=calculus+linear+algebra+previous+year+question+paper+BSc+pdf" },
-      { label: "SWAYAM practice", url: "https://swayam.gov.in/explorer?searchText=calculus%20linear%20algebra" },
-      { label: "Syllabus reference", url: "https://www.google.com/search?q=calculus+linear+algebra+BSc+syllabus+pdf" }
+      { label: "Open PYQs", url: "https://www.google.com/search?q=calculus+linear+algebra+previous+year+question+paper+BSc+pdf" }
     ],
     questions: [
       {
