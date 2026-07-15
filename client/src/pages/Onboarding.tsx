@@ -125,14 +125,16 @@ const Onboarding: React.FC = () => {
             <p className="text-secondary ob-text-sm">Add your current semester classes.</p>
             
             {classes.map((cls, index) => (
-              <div key={index} className="d-flex gap-2 mb-2 align-items-center bg-light p-2 rounded-3 border">
-                <input type="text" className="form-control form-control-sm border-0" placeholder="Course Name" value={cls.courseName} onChange={e => updateClass(index, 'courseName', e.target.value)} />
-                <select className="form-select form-select-sm border-0 ob-day-select" value={cls.dayOfWeek} onChange={e => updateClass(index, 'dayOfWeek', e.target.value)}>
+              <div key={index} className="d-flex flex-column flex-md-row gap-2 mb-2 align-items-md-center bg-light p-2 rounded-3 border">
+                <input type="text" className="form-control form-control-sm border-0 w-100" placeholder="Course Name" value={cls.courseName} onChange={e => updateClass(index, 'courseName', e.target.value)} />
+                <select className="form-select form-select-sm border-0 ob-day-select w-100" value={cls.dayOfWeek} onChange={e => updateClass(index, 'dayOfWeek', e.target.value)}>
                   {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
-                <input type="time" className="form-control form-control-sm border-0" value={cls.startTime} onChange={e => updateClass(index, 'startTime', e.target.value)} />
-                <input type="time" className="form-control form-control-sm border-0" value={cls.endTime} onChange={e => updateClass(index, 'endTime', e.target.value)} />
-                <button className="btn btn-sm text-danger" onClick={() => removeClass(index)}><i className="bi bi-x-circle-fill"></i></button>
+                <div className="d-flex gap-2 w-100">
+                  <input type="time" className="form-control form-control-sm border-0 w-100" value={cls.startTime} onChange={e => updateClass(index, 'startTime', e.target.value)} />
+                  <input type="time" className="form-control form-control-sm border-0 w-100" value={cls.endTime} onChange={e => updateClass(index, 'endTime', e.target.value)} />
+                </div>
+                <button className="btn btn-sm text-danger w-100 mt-2 mt-md-0" onClick={() => removeClass(index)}><i className="bi bi-x-circle-fill"></i> Remove</button>
               </div>
             ))}
             

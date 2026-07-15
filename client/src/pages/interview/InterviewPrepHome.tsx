@@ -188,19 +188,21 @@ const InterviewPrepHome: React.FC = () => {
 
   return (
     <div className="fade-in pb-5">
-      <div className="d-flex justify-content-between align-items-start mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
         <div>
           <h1 className="fw-bold text-dark mb-2 ip-title">Interview Prep</h1>
           <p className="text-secondary fs-6 mb-0 ip-subtitle">
             Practice real questions, submit answers for feedback, schedule mocks, and track readiness.
           </p>
         </div>
-        <button className="btn btn-warning d-flex align-items-center gap-2 fw-medium shadow-sm me-3" onClick={() => navigate('/dashboard/interview-prep/mock')}>
-          <i className="bi bi-robot"></i> AI Mock Interview Simulator
-        </button>
-        <button className="btn btn-primary d-flex align-items-center gap-2 fw-medium shadow-sm" onClick={handleSubmitAttempt} disabled={submitting}>
-          <i className="bi bi-send"></i>{submitting ? "Reviewing..." : "Submit Answer"}
-        </button>
+        <div className="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+          <button className="btn btn-warning d-flex justify-content-center align-items-center gap-2 fw-medium shadow-sm" onClick={() => navigate('/dashboard/interview-prep/mock')}>
+            <i className="bi bi-robot"></i> AI Mock Interview Simulator
+          </button>
+          <button className="btn btn-primary d-flex justify-content-center align-items-center gap-2 fw-medium shadow-sm" onClick={handleSubmitAttempt} disabled={submitting}>
+            <i className="bi bi-send"></i>{submitting ? "Reviewing..." : "Submit Answer"}
+          </button>
+        </div>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}

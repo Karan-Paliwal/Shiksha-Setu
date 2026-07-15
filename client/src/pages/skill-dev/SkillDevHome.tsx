@@ -272,28 +272,28 @@ const SkillDevHome: React.FC = () => {
 
   return (
     <div className="fade-in pb-5">
+      {/* Header */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+          <h1 className="fw-bold text-dark mb-2 sd-hub-title">Skill Development Hub</h1>
+          <p className="text-secondary fs-6 mb-0 sd-hub-subtitle">
+            Master industry-relevant skills, track your learning journey, and earn verified certifications.
+          </p>
+        </div>
+        <div className="d-flex gap-2 w-100 w-md-auto">
+          <button onClick={() => handleAction('Saved Paths')} className="btn btn-light border d-flex align-items-center justify-content-center gap-2 fw-medium shadow-sm flex-grow-1 flex-md-grow-0">
+            <i className="bi bi-bookmark"></i> Saved Paths
+          </button>
+          <button onClick={() => navigate('/dashboard/skill-dev/explore')} className="btn btn-primary d-flex align-items-center justify-content-center gap-2 fw-medium shadow-sm flex-grow-1 flex-md-grow-0">
+            <i className="bi bi-compass"></i> Explore Courses
+          </button>
+        </div>
+      </div>
+
       <div className="row g-4">
         {/* Main Content Area (Left) */}
-        <div className="col-lg-8 pe-lg-4">
+        <div className="col-lg-8 pe-lg-4 order-2 order-lg-1">
           
-          {/* Header */}
-          <div className="d-flex justify-content-between align-items-start mb-4">
-            <div>
-              <h1 className="fw-bold text-dark mb-2 sd-hub-title">Skill Development Hub</h1>
-              <p className="text-secondary fs-6 mb-0 sd-hub-subtitle">
-                Master industry-relevant skills, track your learning journey, and earn verified certifications.
-              </p>
-            </div>
-            <div className="d-flex gap-2">
-              <button onClick={() => handleAction('Saved Paths')} className="btn btn-light border d-flex align-items-center gap-2 fw-medium shadow-sm">
-                <i className="bi bi-bookmark"></i> Saved Paths
-              </button>
-              <button onClick={() => navigate('/dashboard/skill-dev/explore')} className="btn btn-primary d-flex align-items-center gap-2 fw-medium shadow-sm">
-                <i className="bi bi-compass"></i> Explore Courses
-              </button>
-            </div>
-          </div>
-
           {/* Ongoing Learning */}
           <div className="d-flex justify-content-between align-items-center mb-3 mt-5">
             <h5 className="fw-bold mb-0">Ongoing Learning</h5>
@@ -603,7 +603,7 @@ const SkillDevHome: React.FC = () => {
         </div>
 
         {/* Right Sidebar (col-lg-4) */}
-        <div className="col-lg-4">
+        <div className="col-lg-4 order-1 order-lg-2">
           
           {/* Daily Goal */}
           <div className="glass-panel-accent border shadow-sm rounded-4 p-4 mb-4 text-center position-relative overflow-hidden">

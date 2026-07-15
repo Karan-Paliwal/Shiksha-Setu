@@ -226,3 +226,33 @@
   border-radius: 0.5rem !important;
   font-weight: 600 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE LAYOUT (TABLET & MOBILE)
+   ═══════════════════════════════════════════════════════════ */
+@media (min-width: 992px) {
+  .ai-sidebar-col {
+    border-right: 1px solid var(--ss-border) !important;
+  }
+  .ai-timer-col {
+    border-left: 1px solid var(--ss-border) !important;
+  }
+}
+
+@media (max-width: 991px) {
+  .ai-sidebar-col {
+    border-top: 1px solid var(--ss-border) !important;
+  }
+  .ai-timer-col {
+    border-top: 1px solid var(--ss-border) !important;
+  }
+  .ai-mobile-hide {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .ai-max-w-85 {
+    max-width: 100% !important;
+  }
+}

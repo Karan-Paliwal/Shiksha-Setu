@@ -5,13 +5,14 @@ import { useAuth } from "../hooks/useAuth";
 
 interface SidebarProps {
   isCollapsed: boolean;
+  isMobileOpen?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen = false }) => {
   const { logout } = useAuth();
 
   return (
-    <aside className="sidebar transition">
+    <aside className={`sidebar transition ${isMobileOpen ? 'mobile-open' : ''}`}>
       <Link to="/" className="sidebar-brand mb-3 d-flex align-items-center text-decoration-none">
         <img src="/final-logo.png" alt="Shiksha Setu Logo" className="shadow-sm sb-logo-img" />
         <span className={`text-ss-bright fw-bold ms-2 sidebar-text ${isCollapsed ? 'd-none' : ''} sb-brand-text`}>Shiksha Setu</span>

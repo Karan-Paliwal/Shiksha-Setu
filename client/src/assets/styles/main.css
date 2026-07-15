@@ -460,3 +460,78 @@ a {
 .sidebar-collapsed .dashboard-layout {
   margin-left: 80px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE LAYOUT (TABLET & MOBILE)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 991px) {
+  /* Hide sidebar off-screen by default on mobile */
+  .sidebar {
+    transform: translateX(-100%);
+    width: var(--sidebar-width) !important;
+  }
+  
+  /* When opened on mobile, bring it back and add z-index */
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: var(--ss-shadow-lg);
+  }
+
+  /* Ensure text inside sidebar is visible on mobile even if desktop is collapsed */
+  .sidebar.mobile-open .sidebar-text {
+    display: inline !important;
+  }
+  .sidebar.mobile-open .sidebar-brand {
+    justify-content: flex-start;
+    padding: 1.5rem;
+  }
+  .sidebar.mobile-open .sidebar-link {
+    justify-content: flex-start;
+    padding: 0.6rem 1rem;
+  }
+  .sidebar.mobile-open .sidebar-link i {
+    margin-right: 0.75rem !important;
+  }
+
+  /* Topbar extends full width */
+  .topbar {
+    left: 0 !important;
+    padding: 0 1rem;
+  }
+
+  /* Main content takes full width */
+  .dashboard-layout {
+    margin-left: 0 !important;
+  }
+  .main-content {
+    padding: 1rem;
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--ss-transition);
+  }
+  .sidebar-backdrop.show {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    width: 100%;
+    max-width: 100%;
+  }
+  .topbar-actions {
+    margin-left: 0.5rem;
+  }
+}

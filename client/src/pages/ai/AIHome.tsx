@@ -347,9 +347,19 @@ const AIHome: React.FC = () => {
 
   return (
     <div className="fade-in ai-page-wrapper">
+      {/* Mobile Sticky New Session Button */}
+      <div className="d-block d-lg-none sticky-top bg-white p-3 border-bottom z-3 mb-3 shadow-sm rounded-bottom-4">
+        <button
+          className="btn btn-ss-primary w-100 py-3 rounded-pill fw-bold d-flex justify-content-center align-items-center gap-2 shadow-sm"
+          onClick={startNewSession}
+        >
+          <i className="bi bi-plus-lg"></i> New Doubt Session
+        </button>
+      </div>
+
       <div className="row g-0 border rounded-4 bg-white shadow-sm ai-chat-container">
-        <div className="col-lg-3 border-end bg-white d-flex flex-column">
-          <div className="p-4 border-bottom">
+        <div className="col-lg-3 bg-white d-flex flex-column order-3 order-lg-1 ai-sidebar-col">
+          <div className="p-4 border-bottom d-none d-lg-block">
             <button
               className="btn btn-ss-primary w-100 py-3 rounded-pill fw-bold d-flex justify-content-center align-items-center gap-2 shadow-sm transition hover-shadow"
               onClick={startNewSession}
@@ -430,7 +440,7 @@ const AIHome: React.FC = () => {
           </div>
         </div>
 
-        <div className="col-lg-6 d-flex flex-column position-relative bg-white">
+        <div className="col-lg-6 d-flex flex-column position-relative bg-white order-2 order-lg-2">
           <div className="d-flex justify-content-between align-items-center p-3 border-bottom bg-white z-1 shadow-sm">
             <h5 className="mb-0 fw-bold fs-5 d-flex align-items-center gap-2 text-dark">
               {messages.length === 0 ? "New Study Session" : "Active Session"}
@@ -445,9 +455,9 @@ const AIHome: React.FC = () => {
             )}
           </div>
 
-          <div className="flex-grow-1 p-4 d-flex flex-column gap-4 ai-chat-bg">
+          <div className="flex-grow-1 p-2 p-md-4 d-flex flex-column gap-3 gap-md-4 ai-chat-bg">
             {messages.length === 0 ? (
-              <div className="d-flex align-items-center justify-content-center h-100 p-4">
+              <div className="d-flex align-items-center justify-content-center h-100 p-2 p-md-4">
                 <div className="d-flex flex-column align-items-center text-center fade-in ai-cyber-welcome-card border">
                   <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mb-4 ai-icon-lg shadow-sm">
                     <i className={`bi ${(modeDetails[chatMode] || modeDetails.default).icon} ai-icon-text-lg`}></i>
@@ -460,7 +470,7 @@ const AIHome: React.FC = () => {
                     {(modeDetails[chatMode] || modeDetails.default).desc}
                   </p>
                   
-                  <div className="border-top w-100 my-2 pt-3">
+                  <div className="border-top w-100 my-2 pt-3 ai-mobile-hide">
                     <span className="d-block text-uppercase text-muted fw-bold mb-3" style={{ fontSize: '0.65rem', letterSpacing: '1px' }}>
                       Try asking these topics:
                     </span>
@@ -494,7 +504,7 @@ const AIHome: React.FC = () => {
                       </div>
                     )}
                     <div
-                      className={`p-4 shadow-sm ${msg.isAi
+                      className={`p-3 p-md-4 shadow-sm ${msg.isAi
                           ? "bg-white border text-dark rounded-4 rounded-top-0"
                           : "bg-ss-primary text-white rounded-4 rounded-end-0"
                         } ai-max-w-85`}
@@ -520,7 +530,7 @@ const AIHome: React.FC = () => {
                         <i className="bi bi-stars text-primary fs-5"></i>
                         <span className="fw-bold text-primary ai-text-xs-alt-spacing">SHIKSHA AI</span>
                       </div>
-                      <div className="bg-white border rounded-4 rounded-top-0 p-4 shadow-sm d-inline-block">
+                      <div className="bg-white border rounded-4 rounded-top-0 p-3 p-md-4 shadow-sm d-inline-block">
                         <div className="spinner-grow spinner-grow-sm text-primary me-2" role="status">
                           <span className="visually-hidden">Loading...</span>
                         </div>
@@ -593,8 +603,8 @@ const AIHome: React.FC = () => {
           </div>
         </div>
 
-        <div className="col-lg-3 bg-white p-4 border-start">
-          <div className="p-4 text-center mb-5 ai-timer-card border transition hover-shadow">
+        <div className="col-lg-3 bg-white p-3 p-lg-4 order-1 order-lg-3 ai-timer-col">
+          <div className="p-3 p-lg-4 text-center mb-3 mb-lg-5 ai-timer-card border transition hover-shadow">
             <div className="text-info fw-bold mb-2 d-flex align-items-center justify-content-center gap-2 ai-text-xs-spacing" style={{ letterSpacing: '1px' }}>
               <i className="bi bi-stopwatch-fill"></i> B.TECH REVISION TIMER
             </div>
@@ -676,7 +686,7 @@ const AIHome: React.FC = () => {
             </div>
 
             {insights.takeaways.length === 0 && insights.recommendations.length === 0 ? (
-              <div className="text-center py-4 bg-light rounded-4 border px-3">
+              <div className="text-center py-4 bg-light rounded-4 border px-3 d-none d-lg-block">
                 <div className="text-muted mb-2 opacity-50">
                   <i className="bi bi-chat-dots fs-3"></i>
                 </div>

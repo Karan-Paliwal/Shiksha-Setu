@@ -205,12 +205,12 @@ const Dashboard: React.FC = () => {
   return (
     <div className="fade-in pb-5">
       {/* Header and Actions */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
           <h1 className="fw-bold text-ss-bright fs-3 mb-1">Academic Overview, {user?.name.split(" ")[0] || 'Aditya'}</h1>
           <p className="text-ss-muted mb-0 fs-6">Track your trajectory, credits, and career readiness.</p>
         </div>
-        <div className="d-flex gap-2 align-items-center">
+        <div className="d-flex gap-2 align-items-center w-100 w-md-auto">
           <Link to="/dashboard/analytics">
             <button className="btn btn-ss-primary shadow-sm"><i className="bi bi-graph-up-arrow me-2"></i>Detailed Analytics</button>
           </Link>
@@ -303,7 +303,7 @@ const Dashboard: React.FC = () => {
         {/* Main Graph */}
         <div className="col-lg-9">
           <div className="glass-panel p-4 h-100 rounded-4 position-relative">
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
               <div>
                 <h5 className="fw-bold mb-1">
                   {currentSemester === 1
@@ -316,7 +316,7 @@ const Dashboard: React.FC = () => {
                     : "Your academic performance across completed semesters."}
                 </div>
               </div>
-              <div className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-medium">
+              <div className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-medium align-self-start align-self-md-auto">
                 {currentSemester === 1 ? `SGPA: ${currentCgpa > 0 ? currentCgpa.toFixed(2) : "—"}` : (hasRealData ? `Overall Average: ${displayAverageCgpa.toFixed(2)}` : "No data yet")}
               </div>
             </div>
@@ -467,7 +467,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Row 3: Weekly Schedule */}
-      <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 mt-5">
         <h4 className="fw-bold text-ss-bright mb-0">My Weekly Schedule</h4>
       </div>
       <div className="card border shadow-sm rounded-4 p-4 mb-5">

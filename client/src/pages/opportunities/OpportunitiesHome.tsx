@@ -185,7 +185,7 @@ const OpportunitiesHome: React.FC = () => {
     });
   }, [scholarships, sortBy]);
 
-  const visibleScholarships = showAll ? sortedScholarships : sortedScholarships.slice(0, 6);
+  const visibleScholarships = showAll ? sortedScholarships : sortedScholarships.slice(0, 4);
   const featuredScholarship = sortedScholarships[0];
   const deadlinePulse = useMemo(() => sortedScholarships.slice(0, 4), [sortedScholarships]);
   const activeFilterCount = Object.values(filters).filter((value) => value && value !== "All").length;
@@ -217,6 +217,42 @@ const OpportunitiesHome: React.FC = () => {
     });
     setShowAll(true);
   };
+
+  const sidebarExtras = (
+    <>
+      <div className="ss-card mb-4">
+        <h6 className="fw-bold mb-4 d-flex align-items-center gap-2"><i className="bi bi-clock-history"></i> Deadline Pulse</h6>
+
+        {deadlinePulse.map((scholarship) => {
+          const daysLeft = getDaysLeft(scholarship.deadline);
+          return (
+            <button className="oh-deadline-row" key={scholarship.id} onClick={() => openUrl(scholarship.detailsUrl || scholarship.applyUrl)}>
+              <span>
+                <span className="fw-bold text-dark fs-6 d-block">{scholarship.title}</span>
+                <span className={daysLeft <= 7 ? "text-danger oh-text-xs-alt" : "text-muted oh-text-xs-alt"}>Ends in {daysLeft} days</span>
+              </span>
+              <i className="bi bi-chevron-right text-muted"></i>
+            </button>
+          );
+        })}
+
+        {deadlinePulse.length === 0 && <div className="text-muted oh-text-sm">No upcoming scholarship deadlines.</div>}
+
+        <div className="text-center mt-2">
+          <button className="btn btn-link text-primary text-decoration-none oh-text-sm" onClick={() => setShowAll(true)}>View All Deadlines</button>
+        </div>
+      </div>
+
+      <div className="bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-4 p-4 text-center">
+        <div className="bg-white rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3 shadow-sm text-primary oh-icon-md-alt">
+          <i className="bi bi-file-earmark-text fs-3"></i>
+        </div>
+        <h5 className="fw-bold text-dark mb-2">Need help with your application?</h5>
+        <p className="text-muted mb-4 oh-text-sm">Download our "Winning Statement of Purpose" guide and templates used by top scholars.</p>
+        <button className="btn btn-white border w-100 fw-bold shadow-sm text-dark" onClick={() => openUrl("https://scholarships.gov.in/")}>Open Application Guide</button>
+      </div>
+    </>
+  );
 
   return (
     <div className="fade-in pb-5">
@@ -282,7 +318,7 @@ const OpportunitiesHome: React.FC = () => {
       </div>
 
       <div className="row g-4">
-        <div className="col-lg-8">
+        <div className="col-lg-8 order-2 order-lg-1">
           <div className="bg-white border rounded-pill p-2 px-4 mb-4 d-flex align-items-center gap-3 shadow-sm oh-search">
             <i className="bi bi-search text-muted fs-5"></i>
             <input
@@ -386,21 +422,23 @@ const OpportunitiesHome: React.FC = () => {
             </div>
           )}
 
-          {sortedScholarships.length > 6 && (
+          {sortedScholarships.length > 4 && (
             <div className="text-center mb-5">
               <button
                 className="btn btn-white border rounded-pill px-4 fw-bold text-dark shadow-sm"
                 onClick={() => setShowAll((current) => !current)}
               >
-                {showAll ? "Show Fewer Opportunities" : `Explore More Opportunities (${sortedScholarships.length - 6})`}
+                {showAll ? "Show Fewer Opportunities" : `Explore More Opportunities (${sortedScholarships.length - 4})`}
               </button>
             </div>
           )}
 
-
+          <div className="d-block d-lg-none mt-4">
+            {sidebarExtras}
+          </div>
         </div>
 
-        <div className="col-lg-4">
+        <div className="col-lg-4 order-1 order-lg-2">
           <div className="bg-primary rounded-4 p-4 text-white mb-4 shadow-sm">
             <h5 className="fw-bold d-flex align-items-center gap-2 mb-1"><i className="bi bi-check-circle"></i> Eligibility Checker</h5>
             <p className="text-white-50 mb-4 oh-text-sm">{eligibilityMessage}</p>
@@ -489,36 +527,8 @@ const OpportunitiesHome: React.FC = () => {
             <div className="text-center mt-3 text-white-50 oh-text-xxs">Updated profile data improves recommendation accuracy.</div>
           </div>
 
-          <div className="ss-card mb-4">
-            <h6 className="fw-bold mb-4 d-flex align-items-center gap-2"><i className="bi bi-clock-history"></i> Deadline Pulse</h6>
-
-            {deadlinePulse.map((scholarship) => {
-              const daysLeft = getDaysLeft(scholarship.deadline);
-              return (
-                <button className="oh-deadline-row" key={scholarship.id} onClick={() => openUrl(scholarship.detailsUrl || scholarship.applyUrl)}>
-                  <span>
-                    <span className="fw-bold text-dark fs-6 d-block">{scholarship.title}</span>
-                    <span className={daysLeft <= 7 ? "text-danger oh-text-xs-alt" : "text-muted oh-text-xs-alt"}>Ends in {daysLeft} days</span>
-                  </span>
-                  <i className="bi bi-chevron-right text-muted"></i>
-                </button>
-              );
-            })}
-
-            {deadlinePulse.length === 0 && <div className="text-muted oh-text-sm">No upcoming scholarship deadlines.</div>}
-
-            <div className="text-center mt-2">
-              <button className="btn btn-link text-primary text-decoration-none oh-text-sm" onClick={() => setShowAll(true)}>View All Deadlines</button>
-            </div>
-          </div>
-
-          <div className="bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-4 p-4 text-center">
-            <div className="bg-white rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3 shadow-sm text-primary oh-icon-md-alt">
-              <i className="bi bi-file-earmark-text fs-3"></i>
-            </div>
-            <h5 className="fw-bold text-dark mb-2">Need help with your application?</h5>
-            <p className="text-muted mb-4 oh-text-sm">Download our "Winning Statement of Purpose" guide and templates used by top scholars.</p>
-            <button className="btn btn-white border w-100 fw-bold shadow-sm text-dark" onClick={() => openUrl("https://scholarships.gov.in/")}>Open Application Guide</button>
+          <div className="d-none d-lg-block">
+            {sidebarExtras}
           </div>
         </div>
       </div>

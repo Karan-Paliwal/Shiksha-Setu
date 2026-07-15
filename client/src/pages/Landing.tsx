@@ -20,8 +20,8 @@ const Landing: React.FC = () => {
       answer: "The AI Study Assistant uses advanced language models to solve doubts, generate personalized study guides, and create flashcards based on your syllabus."
     },
     {
-      question: "Can I track scholarships from other countries?",
-      answer: "Yes! Shiksha Setu aggregates national and international scholarships, allowing you to filter by country, eligibility criteria, and award amounts."
+      question: "Is Shiksha Setu accessible on mobile devices?",
+      answer: "Yes! The Shiksha Setu platform is fully responsive, ensuring you get a seamless, premium experience whether you are on a smartphone, tablet, or desktop."
     },
     {
       question: "Is my data secure on the platform?",
@@ -106,11 +106,11 @@ const Landing: React.FC = () => {
           Shiksha Setu is the ultimate bridge between your academic journey and professional career. Track grades, find scholarships, and leverage AI to unlock your full potential.
         </p>
 
-        <div className="d-flex gap-3 justify-content-center mb-4">
-          <button className="btn-ss-primary btn-lg px-4 px-md-5 py-3 fs-6 fw-bold" onClick={() => navigate("/login")}>
+        <div className="d-flex flex-column flex-md-row gap-3 justify-content-center mb-4 w-100 px-3">
+          <button className="btn-ss-primary btn-lg px-4 px-md-5 py-3 fs-6 fw-bold lp-btn-mobile-full" onClick={() => navigate("/login")}>
             Get Started for Free
           </button>
-          <button className="btn-ss-outline btn-lg px-4 px-md-5 py-3 fs-6 fw-bold bg-white shadow-sm" onClick={() => navigate("/features")}>
+          <button className="btn-ss-outline btn-lg px-4 px-md-5 py-3 fs-6 fw-bold bg-white shadow-sm lp-btn-mobile-full" onClick={() => navigate("/features")}>
             Features
           </button>
         </div>
@@ -253,7 +253,7 @@ const Landing: React.FC = () => {
             <p className="lp-cta-subtitle">
               Join thousands of students who are already taking control of their careers. Start your journey with Shiksha Setu today.
             </p>
-            <button className="btn-ss-primary btn-lg px-5 py-3 fs-6 fw-bold" onClick={() => navigate("/login")}>
+            <button className="btn-ss-primary btn-lg px-5 py-3 fs-6 fw-bold lp-btn-mobile-full" onClick={() => navigate("/login")}>
               Get Started Now
             </button>
           </div>

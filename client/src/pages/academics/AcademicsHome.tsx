@@ -25,6 +25,8 @@ const AcademicsHome: React.FC = () => {
   const [course, setCourse] = useState("");
   const [planTitle, setPlanTitle] = useState("");
   const [selectedProgram, setSelectedProgram] = useState("All");
+  const [showAllCourses, setShowAllCourses] = useState(false);
+  const [showAllPyqs, setShowAllPyqs] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -171,7 +173,7 @@ const AcademicsHome: React.FC = () => {
       </div>
 
       <div className="row g-4">
-        <div className="col-lg-8">
+        <div className="col-lg-8 order-2 order-lg-1">
           <div className="d-flex justify-content-between align-items-center mb-3 mt-2">
             <h5 className="fw-bold mb-0 d-flex align-items-center">
               <i className="bi bi-link-45deg text-primary me-2"></i>Semester Syllabus & Course Links
@@ -192,8 +194,8 @@ const AcademicsHome: React.FC = () => {
           ) : null}
 
           <div className="row g-3 mb-4">
-            {filteredResources.map((resource) => (
-              <div className="col-md-6" key={resource.id}>
+            {filteredResources.map((resource, index) => (
+              <div className={`col-md-6 ${!showAllCourses && index >= 3 ? 'd-none d-lg-block' : ''}`} key={resource.id}>
                 <a className="ss-card p-3 d-flex align-items-center gap-3 cursor-pointer hover-primary text-decoration-none" href={resource.url} target="_blank" rel="noreferrer">
                   <div className="bg-primary bg-opacity-10 text-primary rounded p-3 d-flex align-items-center justify-content-center">
                     <i className={`bi ${resource.type === "Course" ? "bi-mortarboard" : "bi-file-earmark-text"} fs-4`}></i>
@@ -212,6 +214,13 @@ const AcademicsHome: React.FC = () => {
                 <div className="ss-card p-4 text-ss-muted ah-text-sm">No links found for this course yet.</div>
               </div>
             )}
+            {!showAllCourses && filteredResources.length > 3 && (
+              <div className="col-12 text-center d-lg-none mt-2">
+                <button className="btn btn-outline-primary rounded-pill px-4 btn-sm" onClick={() => setShowAllCourses(true)}>
+                  Show More ({filteredResources.length - 3})
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="d-flex justify-content-between align-items-center mb-3">
@@ -222,8 +231,8 @@ const AcademicsHome: React.FC = () => {
           </div>
 
           <div className="row g-3 mb-4">
-            {filteredPyqResources.map((resource) => (
-              <div className="col-md-6" key={resource.id}>
+            {filteredPyqResources.map((resource, index) => (
+              <div className={`col-md-6 ${!showAllPyqs && index >= 3 ? 'd-none d-lg-block' : ''}`} key={resource.id}>
                 <div className="ss-card p-3 h-100">
                   <div className="d-flex align-items-start gap-3 mb-3">
                     <div className="bg-warning bg-opacity-10 text-warning rounded p-3 d-flex align-items-center justify-content-center">
@@ -258,6 +267,13 @@ const AcademicsHome: React.FC = () => {
             {filteredPyqResources.length === 0 && (
               <div className="col-12">
                 <div className="ss-card p-4 text-ss-muted ah-text-sm">No PYQs found for this course yet.</div>
+              </div>
+            )}
+            {!showAllPyqs && filteredPyqResources.length > 3 && (
+              <div className="col-12 text-center d-lg-none mt-2">
+                <button className="btn btn-outline-primary rounded-pill px-4 btn-sm" onClick={() => setShowAllPyqs(true)}>
+                  Show More ({filteredPyqResources.length - 3})
+                </button>
               </div>
             )}
           </div>
@@ -299,8 +315,7 @@ const AcademicsHome: React.FC = () => {
             )}
           </div>
         </div>
-
-        <div className="col-lg-4">
+        <div className="col-lg-4 order-1 order-lg-2">
           <div className="ss-card">
             <h5 className="fw-bold mb-4 d-flex align-items-center">
               <i className="bi bi-journal-text text-primary me-2"></i>Academic Tasks

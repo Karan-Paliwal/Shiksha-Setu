@@ -136,3 +136,36 @@
 .db-add-schedule-btn:active {
   transform: scale(0.95);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE LAYOUT (TABLET & MOBILE)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .db-chart-area-container {
+    height: 220px;
+  }
+  
+  .db-chart-main-area {
+    left: 30px;
+    right: 10px;
+  }
+
+  .db-chart-y-axis {
+    width: 20px;
+    font-size: 0.7rem;
+  }
+
+  .db-chart-x-axis {
+    font-size: 0.7rem;
+  }
+
+  /* Make sure flex columns take 100% width when forced */
+  .w-md-auto {
+    width: 100% !important;
+  }
+  
+  .w-md-auto .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
